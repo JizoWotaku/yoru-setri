@@ -17,34 +17,34 @@ import AddIcon from '@mui/icons-material/Add';
 import { DragDropContext, Droppable, Draggable, DropResult } from "react-beautiful-dnd";
 
 const music = [
-  "百鬼夜光",
-  "CALL MY NAME",
-  "まっしぐら恋心",
-  "えっと干支が〜る",
-  "溺愛失調症",
-  "N.P.C",
-  "FedLife",
-  "夜光性イントロデュース",
-  "エキゾチックテレパシー",
-  "ワルレリジョナー",
-  "スターリーナイトダンス",
-  "タイムストレッチ",
-  "ネオンライトセンセーション",
-  "もしかして探し",
-  "サディスティック・スイーツ",
-  "らぶめろでぃ",
-  "リテラシックレイジー",
-  "DENPA DANCE",
-  "ヘッドライナーガール",
-  "ハイシャウトダウナー",
-  "クレイジーバンケット",
-  "極彩色パレード",
-  "シンギュラミューズ",
-  "あとらくちょん！",
-  "干支Remix",
-  "恋花火",
-  "HappyNight.HappyLand",
-  "トワイライトアドベンチャー"
+  "Honey Up RUSH!!",
+  "おんりーびーと！",
+  "ちゅきらぶ！",
+  "てっぺんコード",
+  "ハイスピードラブ",
+  "一方通行→ステップアップ！",
+  "ビリビリLOVEゲーム",
+  "レイトショー",
+  "ミラクルダンスを踊りたい",
+  "プラトニックチョロイン",
+  "ぷろふぃ〜る",
+  "ストラテジー",
+  "全人類あいうぉんちゅー！",
+  "ツヨカワ",
+  "トキメキGetCrazy",
+  "混沌MIXをおぼえるうた",
+  "すきすきだいすき",
+  "ふゅーちゃーちゅぅな～！",
+  "禁制ヒロインサバイバル",
+  "GiveME☆Summer",
+  "Day by day",
+  "NonFiction",
+  "Palette",
+  "PiPiPiPiPoPaPi",
+  "ぷろろ〜ぐ",
+  "パラレルワルツ",
+  "奇跡的無敵キラメキランデヴー",
+  "年中無休エンジョイ宣言！"
 ]
 
 type Music = {
@@ -92,7 +92,9 @@ export default function App() {
   };
 
   const setNewSetri = (rows: Music[]) => {
-    setSetri("よるあみセトリ\n\n" + rows.map((row, index) => `${index + 1}. ${row.name}`).join('\n'))
+    const date = new Date();
+    const month = date.getMonth() + 1
+    setSetri(`${month}/${date.getDate()} のんふぃく！セトリ\n\n` + rows.map((row, index) => `${index + 1}. ${row.name}`).join('\n'))
   }
 
   const selectAllText = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement, Element>) => {
