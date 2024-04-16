@@ -1,4 +1,4 @@
-import * as React from 'react';
+import * as React from "react";
 import {
   Container,
   Box,
@@ -10,11 +10,16 @@ import {
   TableRow,
   Paper,
   Button,
-  TextField
+  TextField,
 } from "@mui/material";
-import AddIcon from '@mui/icons-material/Add';
+import AddIcon from "@mui/icons-material/Add";
 
-import { DragDropContext, Droppable, Draggable, DropResult } from "react-beautiful-dnd";
+import {
+  DragDropContext,
+  Droppable,
+  Draggable,
+  DropResult,
+} from "react-beautiful-dnd";
 
 const music = [
   "百鬼夜光",
@@ -44,35 +49,35 @@ const music = [
   "干支Remix",
   "恋花火",
   "HappyNight.HappyLand",
-  "トワイライトアドベンチャー"
-]
+  "トワイライトアドベンチャー",
+];
 
 type Music = {
-  name: string,
-  index: number,
-  order: number
-}
+  name: string;
+  index: number;
+  order: number;
+};
 
 export default function App() {
   const [rows, setRows] = React.useState<Music[]>([]);
-  const [setri, setSetri] = React.useState('');
+  const [setri, setSetri] = React.useState("");
 
   const onClickMusic = (text: string) => {
-    const index = rows.length
+    const index = rows.length;
     const newRecord = {
       name: text,
       index: index,
-      order: index
-    }
-    const newRows = [...rows, newRecord]
-    setRows(newRows)
-    setNewSetri(newRows)
-  }
+      order: index,
+    };
+    const newRows = [...rows, newRecord];
+    setRows(newRows);
+    setNewSetri(newRows);
+  };
 
   const resetRows = () => {
-    setRows([])
-    setSetri('')
-  }
+    setRows([]);
+    setSetri("");
+  };
   const reorder = (startIndex: number, endIndex: number) => {
     const result = Array.from(rows);
     const [removed] = result.splice(startIndex, 1);
@@ -88,14 +93,19 @@ export default function App() {
     }
     const update = reorder(source.index, destination.index);
     setRows(update);
-    setNewSetri(update)
+    setNewSetri(update);
   };
 
   const setNewSetri = (rows: Music[]) => {
-    setSetri("よるあみセトリ\n\n" + rows.map((row, index) => `${index + 1}. ${row.name}`).join('\n'))
-  }
+    setSetri(
+      "よるあみセトリ\n\n" +
+        rows.map((row, index) => `${index + 1}. ${row.name}`).join("\n")
+    );
+  };
 
-  const selectAllText = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement, Element>) => {
+  const selectAllText = (
+    e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement, Element>
+  ) => {
     e.target.select();
   };
 
@@ -103,7 +113,14 @@ export default function App() {
     <Container maxWidth="sm">
       <Box sx={{ my: 4 }}>
         {music.map((m) => (
-          <Button variant="contained" sx={{ m: 1 }} onClick={() => onClickMusic(m)}><AddIcon />{m}</Button>
+          <Button
+            variant="contained"
+            sx={{ m: 1 }}
+            onClick={() => onClickMusic(m)}
+          >
+            <AddIcon />
+            {m}
+          </Button>
         ))}
       </Box>
 
@@ -112,13 +129,25 @@ export default function App() {
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell>長押しで並び替え<Button variant="outlined" sx={{ m: 1 }} onClick={() => resetRows()}>リセット</Button></TableCell>
+                <TableCell>
+                  長押しで並び替え
+                  <Button
+                    variant="outlined"
+                    sx={{ m: 1 }}
+                    onClick={() => resetRows()}
+                  >
+                    リセット
+                  </Button>
+                </TableCell>
               </TableRow>
             </TableHead>
             <DragDropContext onDragEnd={onDragEnd}>
               <Droppable droppableId={"dndTableBody"}>
                 {(provided) => (
-                  <TableBody ref={provided.innerRef} {...provided.droppableProps}>
+                  <TableBody
+                    ref={provided.innerRef}
+                    {...provided.droppableProps}
+                  >
                     {rows.map((row, index) => (
                       <Draggable
                         draggableId={row.name}
@@ -146,7 +175,15 @@ export default function App() {
       </Box>
 
       <Box sx={{ my: 4 }}>
-        <Button href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(setri)}`} variant="contained" sx={{ m: 1 }}>ツイートする</Button>
+        <Button
+          href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(
+            setri
+          )}`}
+          variant="contained"
+          sx={{ m: 1 }}
+        >
+          ツイートする
+        </Button>
       </Box>
 
       <Box sx={{ my: 4 }}>
