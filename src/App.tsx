@@ -97,10 +97,9 @@ export default function App() {
   };
 
   const setNewSetri = (rows: Music[]) => {
-    setSetri(
-      "よるあみセトリ\n\n" +
-        rows.map((row, index) => `${index + 1}. ${row.name}`).join("\n")
-    );
+    const date = new Date();
+    const month = date.getMonth() + 1
+    setSetri(`${month}/${date.getDate()} よるあみセトリ\n\n` + rows.map((row, index) => `${index + 1}. ${row.name}`).join('\n'))
   };
 
   const selectAllText = (
