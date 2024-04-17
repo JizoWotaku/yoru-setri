@@ -50,6 +50,7 @@ const music = [
   "恋花火",
   "HappyNight.HappyLand",
   "トワイライトアドベンチャー",
+  "ファンシーポップコーン"
 ];
 
 type Music = {
