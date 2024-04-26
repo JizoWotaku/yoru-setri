@@ -50,7 +50,7 @@ const music = [
   "年中無休エンジョイ宣言！",
   "トキメキGetCrazy",
   "混沌MIXをおぼえるうた",
-  "I LOVE U＝NONFICTION",
+  "I LOVE YOU＝NONFICTION",
   "新曲",
 ];
 
