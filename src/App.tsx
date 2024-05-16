@@ -51,6 +51,7 @@ const music = [
   "トキメキGetCrazy",
   "混沌MIXをおぼえるうた",
   "I LOVE YOU＝NONFICTION",
+  "キミノヒーロー",
   "新曲",
 ];
 
