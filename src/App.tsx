@@ -30,6 +30,8 @@ const music = [
   "ビリビリラブゲーム",
   "プラトニックチョロイン",
   "てっぺんコード",
+  "I LOVE YOU＝NONFICTION",
+  "らぶげっちゅ",
   "おんりーびーと！",
   "ぷろふぃ〜る",
   "ストラテジー",
@@ -50,9 +52,9 @@ const music = [
   "年中無休エンジョイ宣言！",
   "トキメキGetCrazy",
   "混沌MIXをおぼえるうた",
-  "I LOVE YOU＝NONFICTION",
   "キミノヒーロー",
   "新曲",
+  "MC",
 ];
 
 type Music = {
@@ -102,9 +104,17 @@ export default function App() {
   const setNewSetri = (rows: Music[]) => {
     const date = new Date();
     const month = date.getMonth() + 1;
+    let order = 0
     setSetri(
       `${month}/${date.getDate()} のんふぃく！セトリ\n\n` +
-        rows.map((row, index) => `${index + 1}. ${row.name}`).join("\n")
+        rows.map((row, index) => {
+          if (row.name == "MC") {
+            return "MC"
+          } else {
+            order++
+            return `${order}. ${row.name}`
+          }
+        }).join("\n")
     );
   };
 
