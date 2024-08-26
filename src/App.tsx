@@ -22,38 +22,39 @@ import {
 } from "react-beautiful-dnd";
 
 const music = [
-  "禁制ヒロインサバイバル",
-  "Honey Up RUSH!!",
-  "全人類あいうぉんちゅー",
-  "ツヨカワ",
-  "ちゅきらぶ！",
-  "ビリビリラブゲーム",
-  "プラトニックチョロイン",
-  "てっぺんコード",
-  "I LOVE YOU＝NONFICTION",
-  "らぶげっちゅ",
-  "おんりーびーと！",
-  "ぷろふぃ〜る",
-  "ストラテジー",
-  "一方通行→ステップアップ！",
-  "ミラクルダンスを踊りたい",
-  "ふゅーちゃーちゅぅな～！",
-  "すきすきだいすき",
-  "GiveME☆Summer",
-  "ハイスピードラブ",
-  "レイトショー",
   "Day by day",
+  "GiveME☆Summer",
+  "Honey Up RUSH!!",
+  "I LOVE YOU＝NONFICTION",
   "NonFiction",
   "Palette",
   "PiPiPiPiPoPaPi",
-  "ぷろろ〜ぐ",
-  "パラレルワルツ",
-  "奇跡的無敵キラメキランデヴー",
-  "年中無休エンジョイ宣言！",
-  "トキメキGetCrazy",
-  "混沌MIXをおぼえるうた",
+  "一方通行→ステップアップ！",
+  "おんりーびーと！",
   "キミノヒーロー",
-  "絶対優勝！おぎゃりマスター ",
+  "禁制ヒロインサバイバル",
+  "奇跡的無敵キラメキランデヴー",
+  "混沌MIXをおぼえるうた",
+  "すきすきだいすき",
+  "ストラテジー",
+  "全人類あいうぉんちゅー",
+  "絶対優勝！おぎゃりマスター",
+  "ちゅきらぶ！",
+  "てっぺんコード",
+  "ツヨカワ",
+  "トキメキGetCrazy",
+  "年中無休エンジョイ宣言！",
+  "ハイスピードラブ",
+  "パラレルワルツ",
+  "ひっぱれ大団円",
+  "ビリビリラブゲーム",
+  "ふゅーちゃーちゅぅな～！",
+  "ぷろふぃ〜る",
+  "ぷろろ〜ぐ",
+  "プラトニックチョロイン",
+  "らぶげっちゅ",
+  "ミラクルダンスを踊りたい",
+  "レイトショー",
   "ルンルンパーティー日常",
   "新曲",
   "MC",
@@ -106,17 +107,19 @@ export default function App() {
   const setNewSetri = (rows: Music[]) => {
     const date = new Date();
     const month = date.getMonth() + 1;
-    let order = 0
+    let order = 0;
     setSetri(
       `${month}/${date.getDate()} のんふぃく！セトリ\n\n` +
-        rows.map((row, index) => {
-          if (row.name == "MC") {
-            return "MC"
-          } else {
-            order++
-            return `${order}. ${row.name}`
-          }
-        }).join("\n")
+        rows
+          .map((row, index) => {
+            if (row.name == "MC") {
+              return "MC";
+            } else {
+              order++;
+              return `${order}. ${row.name}`;
+            }
+          })
+          .join("\n")
     );
   };
 
