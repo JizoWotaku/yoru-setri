@@ -22,40 +22,21 @@ import {
 } from "react-beautiful-dnd";
 
 const music = [
-  "Day by day",
-  "GiveME☆Summer",
-  "Honey Up RUSH!!",
-  "I LOVE YOU＝NONFICTION",
-  "NonFiction",
-  "Palette",
-  "PiPiPiPiPoPaPi",
-  "一方通行→ステップアップ！",
-  "おんりーびーと！",
-  "キミノヒーロー",
-  "禁制ヒロインサバイバル",
-  "奇跡的無敵キラメキランデヴー",
-  "混沌MIXをおぼえるうた",
-  "すきすきだいすき",
-  "ストラテジー",
-  "全人類あいうぉんちゅー",
-  "絶対優勝！おぎゃりマスター",
-  "ちゅきらぶ！",
-  "てっぺんコード",
-  "ツヨカワ",
-  "トキメキGetCrazy",
-  "年中無休エンジョイ宣言！",
-  "ハイスピードラブ",
-  "パラレルワルツ",
-  "ひっぱれ大団円",
-  "ビリビリラブゲーム",
-  "ふゅーちゃーちゅぅな～！",
-  "ぷろふぃ〜る",
-  "ぷろろ〜ぐ",
-  "プラトニックチョロイン",
-  "らぶげっちゅ",
-  "ミラクルダンスを踊りたい",
-  "レイトショー",
-  "ルンルンパーティー日常",
+  "SE",
+  "あたしイズム宣言‼︎!",
+  "月から金まで",
+  "ふわり、初恋。",
+  "特別な時間",
+  "君とあの日の距離",
+  "待っていてね。",
+  "等身大のアイラブミー",
+  "ド・ド・ド・ド・ドーナッツ",
+  "好きって。",
+  "遠回りがいいっ!",
+  "青春はサイダー!",
+  "ソライロ",
+  "指先の向こう",
+  "BRAND NEW ME!",
   "新曲",
   "MC",
 ];
@@ -109,17 +90,20 @@ export default function App() {
     const month = date.getMonth() + 1;
     let order = 0;
     setSetri(
-      `${month}/${date.getDate()} のんふぃく！セトリ\n\n` +
+      `${month}/${date.getDate()} #キミそらセトリ\n\n` +
         rows
           .map((row, index) => {
             if (row.name == "MC") {
               return "MC";
+            } else if (row.name == "SE") {
+              return "SE";
             } else {
               order++;
               return `${order}. ${row.name}`;
             }
           })
-          .join("\n")
+          .join("\n") +
+        "\n\n#キミそら #君と見るそら"
     );
   };
 
