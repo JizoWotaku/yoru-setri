@@ -22,6 +22,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import DragHandleIcon from "@mui/icons-material/DragHandle";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import TwitterIcon from "@mui/icons-material/Twitter";
+import { MUSIC_LIST } from "./constants";
 
 import {
   DragDropContext,
@@ -29,28 +30,6 @@ import {
   Draggable,
   DropResult,
 } from "react-beautiful-dnd";
-
-// 曲リスト（定数として定義）
-const MUSIC_LIST = [
-  "SE",
-  "MC",
-  "あたしイズム宣言‼︎!",
-  "ソライロ",
-  "ド・ド・ド・ド・ドーナッツ",
-  "ふわり、初恋。",
-  "君とあの日の距離",
-  "月から金まで",
-  "等身大のアイラブミー",
-  "遠回りがいいっ!",
-  "特別な時間",
-  "好きって。",
-  "青春らいおっと",
-  "青春はサイダー!",
-  "待っていてね。",
-  "指先の向こう",
-  "BRAND NEW ME!",
-  "新曲",
-];
 
 // 型定義：IDを追加してユニーク性を担保
 type SetlistItem = {

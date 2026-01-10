@@ -1,17 +1,54 @@
 import { createTheme } from '@mui/material/styles';
-import { red } from '@mui/material/colors';
+import { lightBlue, pink } from '@mui/material/colors';
 
-// A custom theme for this app
 const theme = createTheme({
   palette: {
     primary: {
-      main: '#556cd6',
+      // 空色をメインカラーに
+      main: lightBlue[400], // #29b6f6
+      contrastText: '#fff', // 文字色は白
     },
     secondary: {
-      main: '#19857b',
+      // アクセントに可愛らしいピンクを使用
+      main: pink[300],
     },
-    error: {
-      main: red.A400,
+    background: {
+      default: '#f0f8ff', // 背景を薄いアリスブルーに
+    },
+  },
+  typography: {
+    fontFamily: [
+      '-apple-system',
+      'BlinkMacSystemFont',
+      '"Segoe UI"',
+      'Roboto',
+      '"Helvetica Neue"',
+      'Arial',
+      'sans-serif',
+    ].join(','),
+    h5: {
+      fontWeight: 700,
+      color: lightBlue[700], // タイトルを濃い青に
+    },
+  },
+  components: {
+    // ボタンを全体的に丸くする（Pill shape）
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          borderRadius: 20,
+          textTransform: 'none', // アルファベットの大文字変換を無効化
+          fontWeight: 'bold',
+        },
+      },
+    },
+    // カード（Paper）の角も少し丸く
+    MuiPaper: {
+      styleOverrides: {
+        rounded: {
+          borderRadius: 16,
+        },
+      },
     },
   },
 });
