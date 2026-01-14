@@ -68,5 +68,27 @@ export const SONG_LIST: Song[] = [
   { title: "新曲", keywords: "新曲shinkyokuしんきょくシンキョクnew" },
 ];
 
-// 既存コードとの互換性のため（もし他で使っていれば）
 export const MUSIC_LIST = SONG_LIST.map((s) => s.title);
+
+// ★追加：ライブ情報の定義
+export type LiveEvent = {
+  date: string;     // YYYY-MM-DD形式
+  liveName: string;
+};
+
+export const LIVE_EVENTS: LiveEvent[] = [
+  { date: "2026-01-03", liveName: "「アイドル甲子園 in clubasia」-DAY2-" },
+  { date: "2026-01-03", liveName: "IDOL ∞ INFINITY 新春SP" },
+  { date: "2026-01-15", liveName: "MARQUEE祭 Vol.168" },
+  { date: "2026-01-16", liveName: "→Taria.Presents 「NexTime vol.2」" },
+  { date: "2026-01-17", liveName: "アイドルマリアージュVol.43" },
+  { date: "2026-01-18", liveName: "渋谷JACK～NEWYEAR SP～" },
+  { date: "2026-01-28", liveName: "GIGA•GIGA SONIC presented by UtaTen / チェキチャ" },
+  { date: "2026-01-30", liveName: "新塘真理 BIRTHDAY LIVE 2026" },
+  { date: "2026-01-31", liveName: "「アイドル甲子園 in KANDA SQUARE HALL」DAY1" },
+  { date: "2026-02-01", liveName: "「アイドル甲子園 in KANDA SQUARE HALL」DAY2" },
+  { date: "2026-02-02", liveName: "TOKYO GIRLS GIRLS" },
+  { date: "2026-02-03", liveName: "GIGA•GIGA SONIC" },
+  { date: "2026-02-07", liveName: "LEADING WINTER" },
+  { date: "2026-02-15", liveName: "MARQUEE祭mini Vol.300" },
+];

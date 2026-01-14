@@ -16,14 +16,19 @@ import {
   Alert,
   Snackbar,
   InputAdornment,
+  Checkbox,       // 追加
+  FormControl,    // 追加
+  FormControlLabel, // 追加
+  Radio,          // 追加
+  RadioGroup,     // 追加
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import DragHandleIcon from "@mui/icons-material/DragHandle";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import TwitterIcon from "@mui/icons-material/Twitter";
-import SearchIcon from "@mui/icons-material/Search"; // アイコン追加
-import { SONG_LIST } from "./constants"; // 変更
+import SearchIcon from "@mui/icons-material/Search";
+import { SONG_LIST, LIVE_EVENTS } from "./constants"; // LIVE_EVENTSを追加インポート
 
 import {
   DragDropContext,
@@ -32,7 +37,6 @@ import {
   DropResult,
 } from "react-beautiful-dnd";
 
-// 型定義：IDを追加してユニーク性を担保
 type SetlistItem = {
   id: string;
   name: string;
@@ -51,6 +55,10 @@ export default function App() {
     )}-${String(d.getDate()).padStart(2, "0")}`;
   });
 
+  // ライブ選択の状態
+  const [selectedLiveName, setSelectedLiveName] = React.useState("");
+  const [includeLiveName, setIncludeLiveName] = React.useState(false);
+
   // 自由入力用の状態
   const [customSong, setCustomSong] = React.useState("");
   
@@ -60,62 +68,64 @@ export default function App() {
   // コピー完了通知用
   const [openSnackbar, setOpenSnackbar] = React.useState(false);
 
+  // 日付が変わった時にライブ情報を検索してセットする
+  React.useEffect(() => {
+    // 選択された日付にマッチするライブを検索
+    const todaysLives = LIVE_EVENTS.filter((e) => e.date === dateStr);
+    
+    if (todaysLives.length > 0) {
+      // ライブがある場合、デフォルトで1つ目を選択し、チェックを入れる
+      setSelectedLiveName(todaysLives[0].liveName);
+      setIncludeLiveName(true);
+    } else {
+      // ライブがない場合、リセット
+      setSelectedLiveName("");
+      setIncludeLiveName(false);
+    }
+  }, [dateStr]);
+
   // フィルタリングされた楽曲リスト
-  // 入力された文字(小文字)が、楽曲のキーワード(小文字)に含まれているかチェック
   const filteredSongs = React.useMemo(() => {
     if (!filterText) return SONG_LIST;
     const lowerFilter = filterText.toLowerCase();
-    // スペース区切りで入力された場合、すべてのキーワードが含まれているか（AND検索）も可能ですが
-    // 今回はシンプルに入力文字列が含まれているかで判定します
     return SONG_LIST.filter((song) => song.keywords.includes(lowerFilter));
   }, [filterText]);
 
-  // 曲を追加する関数
   const addSong = (name: string) => {
     const newItem: SetlistItem = {
-      // ランダムなIDを生成してkey重複を防ぐ（簡易的なID生成）
       id: `item-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       name: name,
     };
     setItems((prev) => [...prev, newItem]);
-    // 追加したら検索ボックスをクリアすると連続入力しやすいかも（好みで調整可）
-    // setFilterText(""); 
   };
 
-  // 1曲削除する関数
   const removeSong = (indexToRemove: number) => {
     setItems((prev) => prev.filter((_, index) => index !== indexToRemove));
   };
 
-  // 全消去
   const resetRows = () => {
     if (window.confirm("セットリストをリセットしますか？")) {
       setItems([]);
     }
   };
 
-  // ドラッグ＆ドロップ終了時の処理
   const onDragEnd = (result: DropResult) => {
     if (!result.destination) return;
-
     const newItems = Array.from(items);
     const [reorderedItem] = newItems.splice(result.source.index, 1);
     newItems.splice(result.destination.index, 0, reorderedItem);
-
     setItems(newItems);
   };
 
-  // ツイート用テキストの自動生成 (useMemoを使用し、itemsかdateStrが変わった時だけ再計算)
+  // ツイート用テキストの自動生成
   const tweetText = React.useMemo(() => {
     const [year, month, day] = dateStr.split("-");
-    // 月日のフォーマット (0埋めを削除して自然な表記に)
     const formattedDate = `${parseInt(month)}/${parseInt(day)}`;
 
     let songCount = 0;
     const setlistText = items
       .map((item) => {
         if (item.name === "SE" || item.name === "MC") {
-          // SEやMCはナンバリングしない
           return item.name;
         } else {
           songCount++;
@@ -124,15 +134,22 @@ export default function App() {
       })
       .join("\n");
 
-    return `${formattedDate} #キミそらセトリ\n\n${setlistText}\n\n#キミそら #君と見るそら`;
-  }, [items, dateStr]);
+    // ライブ名を含めるかどうかの処理
+    const liveNamePart = (includeLiveName && selectedLiveName) 
+      ? `${selectedLiveName}\n\n` 
+      : "";
 
-  // クリップボードにコピー
+    return `${formattedDate} #キミそらセトリ\n\n${liveNamePart}${setlistText}\n\n#キミそら #君と見るそら`;
+  }, [items, dateStr, includeLiveName, selectedLiveName]);
+
   const handleCopy = () => {
     navigator.clipboard.writeText(tweetText).then(() => {
       setOpenSnackbar(true);
     });
   };
+
+  // 現在の日付に対応するライブ情報のリストを取得（レンダリング用）
+  const todaysLives = LIVE_EVENTS.filter((e) => e.date === dateStr);
 
   return (
     <Container maxWidth="sm" sx={{ pb: 10 }}>
@@ -158,9 +175,56 @@ export default function App() {
         />
       </Box>
 
+      {/* ★追加：ライブ情報選択エリア */}
+      {todaysLives.length > 0 && (
+        <Paper sx={{ p: 2, mb: 3, bgcolor: "#e3f2fd", borderColor: "#90caf9" }} variant="outlined">
+          <FormControlLabel
+            control={
+              <Checkbox 
+                checked={includeLiveName}
+                onChange={(e) => setIncludeLiveName(e.target.checked)}
+                color="primary"
+              />
+            }
+            label={
+              <Typography variant="subtitle1" fontWeight="bold">
+                この日のライブ名をセトリに含める
+              </Typography>
+            }
+          />
+          
+          {includeLiveName && (
+            <Box sx={{ mt: 1, ml: 3 }}>
+              {todaysLives.length === 1 ? (
+                // ライブが1つの場合はテキスト表示のみ
+                <Typography variant="body1" sx={{ p: 0.5 }}>
+                  {todaysLives[0].liveName}
+                </Typography>
+              ) : (
+                // ライブが複数の場合はラジオボタンで選択
+                <FormControl component="fieldset">
+                  <RadioGroup
+                    value={selectedLiveName}
+                    onChange={(e) => setSelectedLiveName(e.target.value)}
+                  >
+                    {todaysLives.map((live, idx) => (
+                      <FormControlLabel 
+                        key={idx}
+                        value={live.liveName}
+                        control={<Radio size="small" />}
+                        label={live.liveName}
+                      />
+                    ))}
+                  </RadioGroup>
+                </FormControl>
+              )}
+            </Box>
+          )}
+        </Paper>
+      )}
+
       {/* 楽曲ボタンエリア */}
       <Paper sx={{ p: 2, mb: 4 }} variant="outlined">
-        {/* 検索ボックス */}
         <Box sx={{ mb: 2 }}>
           <TextField
             label="楽曲を検索（ひらがな・ローマ字OK）"
@@ -182,7 +246,6 @@ export default function App() {
           タップして追加
         </Typography>
         
-        {/* フィルタリングされたリストを表示 */}
         <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
           {filteredSongs.length > 0 ? (
             filteredSongs.map((song) => (
@@ -204,7 +267,6 @@ export default function App() {
           )}
         </Box>
 
-        {/* 自由入力エリア */}
         <Box sx={{ mt: 3, display: "flex", gap: 1 }}>
           <TextField
             label="リストにない曲を追加"
@@ -293,7 +355,7 @@ export default function App() {
                                 : "inherit",
                               display: snapshot.isDragging
                                 ? "table"
-                                : undefined, // レイアウト崩れ防止
+                                : undefined,
                             }}
                           >
                             <TableCell
@@ -366,7 +428,6 @@ export default function App() {
         </Stack>
       </Paper>
 
-      {/* 通知用スナックバー */}
       <Snackbar
         open={openSnackbar}
         autoHideDuration={2000}
