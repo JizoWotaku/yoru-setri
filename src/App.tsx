@@ -128,11 +128,11 @@ export default function App() {
     // 場所情報の文字列を作成
     // チェックが入っていて、かつ場所情報がある場合のみ表示
     const placePart = (includeLiveName && selectedEvent?.place) 
-      ? `📍${selectedEvent.place}` 
-      : "";
+      ? `📍${selectedEvent.place}\n` 
+      : " ";
 
     // ご要望のフォーマット: 日付 + 場所 + 改行
-    const formattedDate = `🗓️${parseInt(month)}/${parseInt(day)}${placePart}\n`;
+    const formattedDate = `🗓️${parseInt(month)}/${parseInt(day)}${placePart}`;
 
     let songCount = 0;
     const setlistText = items
