@@ -426,7 +426,7 @@ export default function App() {
           value={tweetText}
           fullWidth
           multiline
-          rows={6}
+          rows={12}
           variant="outlined"
           sx={{ mb: 2, bgcolor: "white" }}
           InputProps={{ readOnly: true }}
