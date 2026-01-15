@@ -84,7 +84,7 @@ export const LIVE_EVENTS: LiveEvent[] = [
   { date: "2026-01-15", liveName: "MARQUEE祭 Vol.168", place: "Spotify O-WEST" },
   { date: "2026-01-16", liveName: "→Taria.Presents 「NexTime vol.2」", place: "白金高輪SELENE b2" },
   { date: "2026-01-17", liveName: "アイドルマリアージュVol.43", place: "有明 スモールワールズ" },
-  { date: "2026-01-18", liveName: "渋谷JACK～NEWYEAR SP～" },
+  { date: "2026-01-18", liveName: "渋谷JACK～NEWYEAR SP～", place: "渋谷VIDENT" },
   { date: "2026-01-28", liveName: "GIGA•GIGA SONIC presented by UtaTen / チェキチャ", place: "duo MUSIC EXCHANGE" },
   { date: "2026-01-30", liveName: "新塘真理 BIRTHDAY LIVE 2026", place: "SHIBUYA DIVE" },
   { date: "2026-01-31", liveName: "「アイドル甲子園 in KANDA SQUARE HALL」DAY1" },
