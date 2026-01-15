@@ -21,6 +21,13 @@ import {
   FormControlLabel,
   Radio,
   RadioGroup,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  useMediaQuery,
+  useTheme,
+  CircularProgress,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -28,7 +35,10 @@ import DragHandleIcon from "@mui/icons-material/DragHandle";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import TwitterIcon from "@mui/icons-material/Twitter";
 import SearchIcon from "@mui/icons-material/Search";
+import ImageIcon from "@mui/icons-material/Image";
+import DownloadIcon from "@mui/icons-material/Download";
 import { SONG_LIST, LIVE_EVENTS } from "./constants";
+import html2canvas from "html2canvas";
 
 import {
   DragDropContext,
@@ -43,10 +53,14 @@ type SetlistItem = {
 };
 
 export default function App() {
+  const theme = useTheme();
+  // スマホかどうかを判定
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
   // セットリストの状態
   const [items, setItems] = React.useState<SetlistItem[]>([]);
 
-  // 日付の状態（デフォルトは今日 YYYY-MM-DD形式）
+  // 日付の状態
   const [dateStr, setDateStr] = React.useState(() => {
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(
@@ -68,16 +82,22 @@ export default function App() {
   // コピー完了通知用
   const [openSnackbar, setOpenSnackbar] = React.useState(false);
 
+  // 画像プレビューモーダルの状態
+  const [openImageDialog, setOpenImageDialog] = React.useState(false);
+  
+  // 生成された画像のURL
+  const [previewUrl, setPreviewUrl] = React.useState<string | null>(null);
+  // 画像生成中フラグ
+  const [isGenerating, setIsGenerating] = React.useState(false);
+
   // 日付が変わった時にライブ情報を検索してセットする
   React.useEffect(() => {
     const todaysLives = LIVE_EVENTS.filter((e) => e.date === dateStr);
     
     if (todaysLives.length > 0) {
-      // ライブがある場合、デフォルトで1つ目を選択し、チェックを入れる
       setSelectedLiveName(todaysLives[0].liveName);
       setIncludeLiveName(true);
     } else {
-      // ライブがない場合、リセット
       setSelectedLiveName("");
       setIncludeLiveName(false);
     }
@@ -120,18 +140,14 @@ export default function App() {
   const tweetText = React.useMemo(() => {
     const [year, month, day] = dateStr.split("-");
     
-    // 現在選択されているライブ情報を取得（場所情報を取得するため）
     const selectedEvent = LIVE_EVENTS.find(
       (e) => e.date === dateStr && e.liveName === selectedLiveName
     );
 
-    // 場所情報の文字列を作成
-    // チェックが入っていて、かつ場所情報がある場合のみ表示
     const placePart = (includeLiveName && selectedEvent?.place) 
       ? `📍${selectedEvent.place}\n` 
       : " ";
 
-    // ご要望のフォーマット: 日付 + 場所 + 改行
     const formattedDate = `🗓️${parseInt(month)}/${parseInt(day)}${placePart}`;
 
     let songCount = 0;
@@ -146,12 +162,11 @@ export default function App() {
       })
       .join("\n");
 
-    // ライブ名を含めるかどうかの処理
     const liveNamePart = (includeLiveName && selectedLiveName) 
       ? `${selectedLiveName}\n\n` 
       : "";
 
-    // ハッシュタグの前の改行は、formattedDateに\nが含まれているため、ここでは調整しています
+    // ハッシュタグの前の改行調整
     return `${formattedDate}#キミそらセトリ\n\n${liveNamePart}${setlistText}\n\n#キミそら #君と見るそら`;
   }, [items, dateStr, includeLiveName, selectedLiveName]);
 
@@ -161,12 +176,52 @@ export default function App() {
     });
   };
 
-  // 現在の日付に対応するライブ情報のリストを取得（レンダリング用）
+  // 画像生成処理
+  const handleGeneratePreview = async () => {
+    setIsGenerating(true);
+    // 描画更新を待つために少し遅延
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    const element = document.getElementById("setlist-image-card");
+    if (!element) {
+        setIsGenerating(false);
+        return;
+    }
+
+    try {
+        const canvas = await html2canvas(element, {
+          scale: 2, 
+          backgroundColor: null,
+          useCORS: true, 
+          logging: false,
+        });
+        setPreviewUrl(canvas.toDataURL("image/png"));
+        setOpenImageDialog(true);
+    } catch (error) {
+        console.error("Image generation failed", error);
+        alert("画像の生成に失敗しました。");
+    } finally {
+        setIsGenerating(false);
+    }
+  };
+
+  // 画像保存処理（生成済みのURLを使用）
+  const handleSaveImage = () => {
+    if (!previewUrl) return;
+    const link = document.createElement("a");
+    link.href = previewUrl;
+    link.download = `kimisora_setlist_${dateStr}.png`;
+    link.click();
+  };
+
   const todaysLives = LIVE_EVENTS.filter((e) => e.date === dateStr);
+  const selectedEvent = LIVE_EVENTS.find(
+    (e) => e.date === dateStr && e.liveName === selectedLiveName
+  );
 
   return (
     <Container maxWidth="sm" sx={{ pb: 10 }}>
-      {/* ヘッダー・日付選択 */}
+      {/* ヘッダー */}
       <Box
         sx={{
           my: 4,
@@ -209,7 +264,6 @@ export default function App() {
           {includeLiveName && (
             <Box sx={{ mt: 1, ml: 3 }}>
               {todaysLives.length === 1 ? (
-                // ライブが1つの場合はテキスト表示のみ
                 <Typography variant="body1" sx={{ p: 0.5 }}>
                   {todaysLives[0].liveName}
                   {todaysLives[0].place && (
@@ -219,7 +273,6 @@ export default function App() {
                   )}
                 </Typography>
               ) : (
-                // ライブが複数の場合はラジオボタンで選択
                 <FormControl component="fieldset">
                   <RadioGroup
                     value={selectedLiveName}
@@ -419,7 +472,7 @@ export default function App() {
         </TableContainer>
       </Box>
 
-      {/* アクションエリア */}
+      {/* アクションエリア（ボタン群の改善） */}
       <Paper sx={{ p: 2, mt: 4, bgcolor: "#f8f9fa" }} elevation={0}>
         <TextField
           label="ツイート内容プレビュー"
@@ -431,14 +484,19 @@ export default function App() {
           sx={{ mb: 2, bgcolor: "white" }}
           InputProps={{ readOnly: true }}
         />
-        <Stack direction="row" spacing={2} justifyContent="center">
-          <Button
+        
+        {/* スマホの場合は縦積み、PCの場合は横並び */}
+        <Stack direction={isMobile ? "column" : "row"} spacing={2} justifyContent="center">
+           <Button
             variant="outlined"
-            startIcon={<ContentCopyIcon />}
-            onClick={handleCopy}
+            color="secondary"
+            startIcon={isGenerating ? <CircularProgress size={20} /> : <ImageIcon />}
+            onClick={handleGeneratePreview}
             fullWidth
+            size="large"
+            disabled={items.length === 0 || isGenerating}
           >
-            コピー
+            {isGenerating ? "生成中..." : "画像生成"}
           </Button>
           <Button
             variant="contained"
@@ -448,9 +506,19 @@ export default function App() {
               tweetText
             )}`}
             fullWidth
+            size="large"
             sx={{ fontWeight: "bold" }}
           >
             ツイート
+          </Button>
+           <Button
+            variant="outlined"
+            startIcon={<ContentCopyIcon />}
+            onClick={handleCopy}
+            fullWidth
+            size="large"
+          >
+            コピー
           </Button>
         </Stack>
       </Paper>
@@ -465,6 +533,180 @@ export default function App() {
           コピーしました！
         </Alert>
       </Snackbar>
+
+      {/* ★ 隠し描画エリア ★
+        画面外に配置して、ユーザーには見せないが、html2canvasでキャプチャするために存在させる。
+        固定幅(600px)にすることで、デバイスに関わらず同じレイアウトで画像を生成できる。
+      */}
+      <Box sx={{ position: "fixed", top: 0, left: "-2000px", zIndex: -1 }}>
+        <Paper
+            id="setlist-image-card"
+            elevation={0}
+            sx={{
+                width: "600px", 
+                minWidth: "600px",
+                minHeight: "600px",
+                p: 5,
+                borderRadius: 4,
+                background: "linear-gradient(135deg, #e3f2fd 0%, #fce4ec 100%)",
+                position: "relative",
+                overflow: "hidden",
+                boxSizing: 'border-box'
+            }}
+            >
+            {/* 装飾用の円 */}
+            <Box
+                sx={{
+                position: "absolute",
+                top: -60,
+                right: -60,
+                width: 200,
+                height: 200,
+                borderRadius: "50%",
+                bgcolor: "rgba(255,255,255,0.4)",
+                }}
+            />
+            <Box
+                sx={{
+                position: "absolute",
+                bottom: -40,
+                left: -40,
+                width: 150,
+                height: 150,
+                borderRadius: "50%",
+                bgcolor: "rgba(255,255,255,0.4)",
+                }}
+            />
+
+            {/* コンテンツ */}
+            <Box sx={{ position: "relative", zIndex: 1, textAlign: 'center' }}>
+                {/* 日付 */}
+                <Typography variant="h5" sx={{ color: "#0277bd", fontWeight: "bold", mb: 0.5, letterSpacing: 2 }}>
+                {dateStr.replace(/-/g, '.')}
+                </Typography>
+                
+                {/* ライブ名 */}
+                {includeLiveName && selectedLiveName && (
+                <Box sx={{ mb: 3 }}>
+                    <Typography variant="h4" sx={{ fontWeight: "900", color: "#424242", lineHeight: 1.3 }}>
+                    {selectedLiveName}
+                    </Typography>
+                    {includeLiveName && selectedEvent?.place && (
+                        <Typography variant="h6" sx={{ color: "#757575", mt: 1, fontWeight: 'normal' }}>
+                        @ {selectedEvent.place}
+                        </Typography>
+                    )}
+                </Box>
+                )}
+                
+                <Box sx={{ width: '60%', height: '3px', bgcolor: 'primary.main', mx: 'auto', mb: 4, opacity: 0.6, borderRadius: 2 }} />
+
+                {/* セトリ（リスト表示） */}
+                <Stack spacing={2} sx={{ textAlign: 'left', mx: 4 }}>
+                {items.map((item, index) => {
+                    const isSpecial = item.name === "MC" || item.name === "SE";
+                    let count = 0;
+                    for(let i=0; i<index; i++) {
+                        if(items[i].name !== "MC" && items[i].name !== "SE") count++;
+                    }
+                    const displayNum = isSpecial ? "" : `${String(count + 1).padStart(2, '0')}.`;
+
+                    return (
+                    <Box key={item.id} sx={{ display: 'flex', alignItems: 'baseline' }}>
+                        <Typography 
+                        sx={{ 
+                            width: '40px', 
+                            fontWeight: '900', 
+                            color: 'primary.main',
+                            fontSize: isSpecial ? '1rem' : '1.4rem',
+                            mr: 1,
+                            textAlign: 'right',
+                            fontFamily: 'Roboto, Helvetica, Arial, sans-serif'
+                        }}
+                        >
+                        {displayNum}
+                        </Typography>
+                        <Typography 
+                        sx={{ 
+                            fontWeight: isSpecial ? 'normal' : 'bold',
+                            color: isSpecial ? 'text.secondary' : 'text.primary',
+                            fontSize: isSpecial ? '1.1rem' : '1.5rem',
+                            lineHeight: 1.2
+                        }}
+                        >
+                        {item.name}
+                        </Typography>
+                    </Box>
+                    );
+                })}
+                </Stack>
+                
+                <Box sx={{ mt: 5, pt: 2, borderTop: '2px dashed #bdbdbd' }}>
+                <Typography variant="body1" sx={{ color: "#757575", display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, fontWeight: 'bold' }}>
+                    #キミそらセトリ
+                </Typography>
+                </Box>
+            </Box>
+        </Paper>
+      </Box>
+
+      {/* 画像プレビュー用ダイアログ */}
+      <Dialog
+        open={openImageDialog}
+        onClose={() => setOpenImageDialog(false)}
+        maxWidth="md"
+        fullWidth
+        scroll="body"
+      >
+        <DialogTitle>画像を保存してシェア！</DialogTitle>
+        <DialogContent 
+            sx={{ 
+                display: 'flex', 
+                flexDirection: 'column', 
+                alignItems: 'center', 
+                bgcolor: '#f5f5f5', 
+                p: isMobile ? 2 : 4 
+            }}
+        >
+            <Typography variant="caption" sx={{ mb: 2, textAlign: 'center' }}>
+                ※保存ボタンが効かない場合は画像を長押しして保存してください
+            </Typography>
+
+            {/* 生成された画像を表示 (スマホでは幅に合わせて縮小される) */}
+            {previewUrl ? (
+                <img 
+                    src={previewUrl} 
+                    alt="Setlist Preview" 
+                    style={{ 
+                        maxWidth: '100%', 
+                        height: 'auto', 
+                        boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+                        borderRadius: '8px'
+                    }} 
+                />
+            ) : (
+                <CircularProgress />
+            )}
+
+        </DialogContent>
+        <DialogActions sx={{ justifyContent: 'center', pb: 3, px: 3 }}>
+          <Stack direction="column" spacing={2} width="100%">
+            <Button 
+                variant="contained" 
+                onClick={handleSaveImage}
+                startIcon={<DownloadIcon />}
+                size="large"
+                fullWidth
+                sx={{ borderRadius: 10, fontWeight: 'bold', py: 1.5 }}
+            >
+                画像を保存
+            </Button>
+            <Button onClick={() => setOpenImageDialog(false)} fullWidth sx={{ color: 'text.secondary' }}>
+                閉じる
+            </Button>
+          </Stack>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 }

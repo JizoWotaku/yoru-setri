@@ -10,6 +10,7 @@
     "@types/react": "latest",
     "@types/react-beautiful-dnd": "^13.1.2",
     "@types/react-dom": "latest",
+    "html2canvas": "^1.4.1",
     "react": "latest",
     "react-beautiful-dnd": "^13.1.1",
     "react-dom": "latest",
@@ -33,5 +34,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "@types/html2canvas": "^1.0.0"
   }
 }
