@@ -6,16 +6,11 @@ export type Song = {
 export const SONG_LIST: Song[] = [
   { title: "SE", keywords: "seえすいー" },
   { title: "MC", keywords: "mcえむしー" },
+  { title: "アンコール", keywords: "encoreあんこーる" },
   {
-    title: "あたしイズム宣言‼︎!",
+    title: "あたしイズム宣言!!!",
     keywords:
-      "あたしイズム宣言‼︎!atashiizumusengenあたしいずむせんげんアタシイズムセンゲン",
-  },
-  { title: "ソライロ", keywords: "ソライロsorairoそらいろソライロ" },
-  {
-    title: "ド・ド・ド・ド・ドーナッツ",
-    keywords:
-      "ド・ド・ド・ド・ドーナッツdododododonattsuどどどどどーなっつドドドドドーナッツdonut",
+      "あたしイズム宣言!!!atashiizumusengenあたしいずむせんげんアタシイズムセンゲン",
   },
   {
     title: "ふわり、初恋。",
@@ -46,26 +41,31 @@ export const SONG_LIST: Song[] = [
   },
   { title: "好きって。", keywords: "好きって。sukitte好きってすきってスキッテ" },
   {
-    title: "青春らいおっと",
-    keywords: "青春らいおっとseishunriotせいしゅんらいおっとセイシュンライオット",
+    title: "指先の向こう",
+    keywords: "指先の向こうyubisakinomukouゆびさきのむこうユビサキノムコウ",
   },
   {
     title: "青春はサイダー!",
     keywords: "青春はサイダー!seishunwasaidaせいしゅんはさいだーセイシュンハサイダーcider",
   },
   {
+    title: "青春らいおっと",
+    keywords: "青春らいおっとseishunriotせいしゅんらいおっとセイシュンライオット",
+  },
+  {
     title: "待っていてね。",
     keywords: "待っていてね。matteiteneまっていてねマッテイテネ",
   },
+  { title: "ソライロ", keywords: "ソライロsorairoそらいろソライロ" },
   {
-    title: "指先の向こう",
-    keywords: "指先の向こうyubisakinomukouゆびさきのむこうユビサキノムコウ",
+    title: "ド・ド・ド・ド・ドーナッツ",
+    keywords:
+      "ド・ド・ド・ド・ドーナッツdododododonattsuどどどどどーなっつドドドドドーナッツdonut",
   },
   {
     title: "BRAND NEW ME!",
     keywords: "brand new me!brandnewmeぶらんどにゅーみーブランドニューミーbnm",
   },
-  { title: "新曲", keywords: "新曲shinkyokuしんきょくシンキョクnew" },
 ];
 
 export const MUSIC_LIST = SONG_LIST.map((s) => s.title);
