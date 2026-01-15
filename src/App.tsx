@@ -38,6 +38,7 @@ import TwitterIcon from "@mui/icons-material/Twitter";
 import SearchIcon from "@mui/icons-material/Search";
 import ImageIcon from "@mui/icons-material/Image";
 import DownloadIcon from "@mui/icons-material/Download";
+import ShareIcon from "@mui/icons-material/Share"; // シェアアイコン追加
 import { SONG_LIST, LIVE_EVENTS } from "./constants";
 import html2canvas from "html2canvas";
 
@@ -89,6 +90,16 @@ export default function App() {
   // 画像生成関連の状態
   const [previewUrl, setPreviewUrl] = React.useState<string | null>(null);
   const [isGenerating, setIsGenerating] = React.useState(false);
+
+  // Web Share APIが使えるかどうか
+  const [canShare, setCanShare] = React.useState(false);
+
+  React.useEffect(() => {
+    // ブラウザが共有機能をサポートしているかチェック
+    if (typeof navigator.share === 'function') {
+      setCanShare(true);
+    }
+  }, []);
 
   // 日付が変わった時にライブ情報を検索してセットする
   React.useEffect(() => {
@@ -183,7 +194,6 @@ export default function App() {
     const indices: string[] = [];
 
     items.forEach((item) => {
-      // MC/SE以外をカウント（プレビュー側のロジックと合わせる）
       if (item.name !== "SE" && item.name !== "MC") {
         normalCount++;
       }
@@ -198,15 +208,12 @@ export default function App() {
     });
 
     if (indices.length === 0) return null;
-    
-    // SE/MCは連結（✔✔）、それ以外はカンマ区切り（1, 3）
     return isSpecial ? indices.join("") : indices.join(", ");
   };
 
   // 画像生成処理（プレビュー用）
   const handleGeneratePreview = async () => {
     setIsGenerating(true);
-    // 描画更新待ち
     await new Promise(resolve => setTimeout(resolve, 100));
 
     const element = document.getElementById("setlist-image-card");
@@ -239,6 +246,33 @@ export default function App() {
     link.href = previewUrl;
     link.download = `kimisora_setlist_${dateStr}.png`;
     link.click();
+  };
+
+  // シェア機能（スマホ用）
+  const handleShareImage = async () => {
+    if (!previewUrl) return;
+
+    try {
+      // DataURLをBlobに変換
+      const response = await fetch(previewUrl);
+      const blob = await response.blob();
+      
+      // シェア用のファイルオブジェクト作成
+      const file = new File([blob], `kimisora_setlist_${dateStr}.png`, { type: "image/png" });
+
+      // シェア実行
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          text: tweetText, // テキストも一緒にシェアしようと試みる（アプリによる）
+        });
+      } else {
+        alert("お使いの環境では画像のシェアに対応していません。\n画像を長押しして保存してください。");
+      }
+    } catch (error) {
+      // シェアがキャンセルされた場合などはここに来るが、基本は何もしない
+      console.log("Share failed or canceled", error);
+    }
   };
 
   const todaysLives = LIVE_EVENTS.filter((e) => e.date === dateStr);
@@ -699,7 +733,7 @@ export default function App() {
         fullWidth
         scroll="body"
       >
-        <DialogTitle>画像を保存してシェア！</DialogTitle>
+        <DialogTitle>{canShare && isMobile ? "画像をシェア！" : "画像を保存してシェア！"}</DialogTitle>
         <DialogContent 
             sx={{ 
                 display: 'flex', 
@@ -711,7 +745,7 @@ export default function App() {
         >
             <Typography variant="caption" sx={{ mb: 2, textAlign: 'center' }}>
                 {isMobile 
-                  ? "画像を長押しして保存してください" 
+                  ? "画像を長押しして保存することもできます" 
                   : "※保存ボタンが効かない場合は画像を長押しして保存してください"}
             </Typography>
 
@@ -733,7 +767,23 @@ export default function App() {
         </DialogContent>
         <DialogActions sx={{ justifyContent: 'center', pb: 3, px: 3 }}>
           <Stack direction="column" spacing={2} width="100%">
-            {/* スマホの場合は保存ボタンを表示しない */}
+            
+            {/* スマホかつシェア機能が使える場合のみ「画像をシェア」ボタンを表示 */}
+            {isMobile && canShare && (
+              <Button 
+                variant="contained" 
+                color="info"
+                onClick={handleShareImage}
+                startIcon={<ShareIcon />}
+                size="large"
+                fullWidth
+                sx={{ borderRadius: 10, fontWeight: 'bold', py: 1.5 }}
+              >
+                画像をシェア (Xなど)
+              </Button>
+            )}
+
+            {/* PCの場合は保存ボタンを表示 */}
             {!isMobile && (
               <Button 
                   variant="contained" 
@@ -746,6 +796,7 @@ export default function App() {
                   画像を保存
               </Button>
             )}
+            
             <Button onClick={() => setOpenImageDialog(false)} fullWidth sx={{ color: 'text.secondary' }}>
                 閉じる
             </Button>
