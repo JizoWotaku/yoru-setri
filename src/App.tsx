@@ -5,7 +5,6 @@ import {
   Table,
   TableBody,
   TableCell,
-  TableContainer,
   TableRow,
   Paper,
   Button,
@@ -16,19 +15,15 @@ import {
   Alert,
   Snackbar,
   InputAdornment,
-  Checkbox,
-  FormControl,
-  FormControlLabel,
-  Radio,
-  RadioGroup,
+  Badge,
+  CircularProgress,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
   useMediaQuery,
   useTheme,
-  Badge,
-  CircularProgress,
+  Collapse, // For accordion effect
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -38,7 +33,11 @@ import TwitterIcon from "@mui/icons-material/Twitter";
 import SearchIcon from "@mui/icons-material/Search";
 import ImageIcon from "@mui/icons-material/Image";
 import DownloadIcon from "@mui/icons-material/Download";
-import ShareIcon from "@mui/icons-material/Share"; // シェアアイコン追加
+import ShareIcon from "@mui/icons-material/Share";
+import CloseIcon from "@mui/icons-material/Close";
+import ClearIcon from "@mui/icons-material/Clear";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import { SONG_LIST, LIVE_EVENTS } from "./constants";
 import html2canvas from "html2canvas";
 
@@ -54,15 +53,26 @@ type SetlistItem = {
   name: string;
 };
 
+// Group definition for multiple setlists
+type SetlistGroup = {
+  id: string;
+  title: string;
+  place: string;
+  items: SetlistItem[];
+};
+
 export default function App() {
   const theme = useTheme();
-  // スマホかどうかを判定
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
-  // セットリストの状態
-  const [items, setItems] = React.useState<SetlistItem[]>([]);
-
-  // 日付の状態
+  // State for multiple setlists
+  const [groups, setGroups] = React.useState<SetlistGroup[]>([
+    { id: "g-default", title: "", place: "", items: [] }
+  ]);
+  
+  // Track which group is currently selected for adding songs
+  const [activeGroupId, setActiveGroupId] = React.useState<string>("g-default");
+  
   const [dateStr, setDateStr] = React.useState(() => {
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(
@@ -71,115 +81,199 @@ export default function App() {
     )}-${String(d.getDate()).padStart(2, "0")}`;
   });
 
-  // ライブ選択の状態
-  const [selectedLiveName, setSelectedLiveName] = React.useState("");
-  const [includeLiveName, setIncludeLiveName] = React.useState(false);
-
-  // 自由入力用の状態
   const [customSong, setCustomSong] = React.useState("");
-  
-  // 検索フィルター用の状態
   const [filterText, setFilterText] = React.useState("");
-
-  // コピー完了通知用
   const [openSnackbar, setOpenSnackbar] = React.useState(false);
-
-  // 画像プレビューモーダルの状態
   const [openImageDialog, setOpenImageDialog] = React.useState(false);
-
-  // 画像生成関連の状態
   const [previewUrl, setPreviewUrl] = React.useState<string | null>(null);
   const [isGenerating, setIsGenerating] = React.useState(false);
-
-  // Web Share APIが使えるかどうか
   const [canShare, setCanShare] = React.useState(false);
 
   React.useEffect(() => {
-    // ブラウザが共有機能をサポートしているかチェック
     if (typeof navigator.share === 'function') {
       setCanShare(true);
     }
   }, []);
 
-  // 日付が変わった時にライブ情報を検索してセットする
+  // 初期ロード時のみの処理（日付変更時は handleDateChange で制御するため useEffect は削除）
   React.useEffect(() => {
-    const todaysLives = LIVE_EVENTS.filter((e) => e.date === dateStr);
-    
-    if (todaysLives.length > 0) {
-      setSelectedLiveName(todaysLives[0].liveName);
-      setIncludeLiveName(true);
-    } else {
-      setSelectedLiveName("");
-      setIncludeLiveName(false);
+    // 初回マウント時にその日のライブがあればセットする（初期stateが空の場合のみ）
+    if (groups.length === 1 && groups[0].title === "" && groups[0].items.length === 0) {
+        const todays = LIVE_EVENTS.filter((e) => e.date === dateStr);
+        if (todays.length > 0) {
+            setGroups([{ 
+                id: groups[0].id, 
+                title: todays[0].liveName, 
+                place: todays[0].place || "", 
+                items: [] 
+            }]);
+        }
     }
-  }, [dateStr]);
+  }, []);
 
-  // フィルタリングされた楽曲リスト
+  // 日付変更時のハンドラ
+  const handleDateChange = (newDate: string) => {
+      setDateStr(newDate);
+      
+      // リセット処理
+      const newId = `g-${Date.now()}`;
+      const todays = LIVE_EVENTS.filter((e) => e.date === newDate);
+      
+      if (todays.length > 0) {
+          // ライブがある場合はデフォルトで1つ目をセット
+          setGroups([{ 
+              id: newId, 
+              title: todays[0].liveName, 
+              place: todays[0].place || "", 
+              items: [] 
+          }]);
+      } else {
+          // ない場合は空で初期化
+          setGroups([{ id: newId, title: "", place: "", items: [] }]);
+      }
+      setActiveGroupId(newId);
+  };
+
+  // Helper to update a specific group
+  const updateGroup = (groupId: string, updater: (g: SetlistGroup) => SetlistGroup) => {
+    setGroups(prev => prev.map(g => g.id === groupId ? updater(g) : g));
+  };
+
   const filteredSongs = React.useMemo(() => {
     if (!filterText) return SONG_LIST;
     const lowerFilter = filterText.toLowerCase();
     return SONG_LIST.filter((song) => song.keywords.includes(lowerFilter));
   }, [filterText]);
 
+  // Add song to the ACTIVE group
   const addSong = (name: string) => {
     const newItem: SetlistItem = {
       id: `item-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       name: name,
     };
-    setItems((prev) => [...prev, newItem]);
+    
+    let targetId = activeGroupId;
+    if (!groups.find(g => g.id === targetId)) {
+        targetId = groups[groups.length - 1].id;
+        setActiveGroupId(targetId);
+    }
+
+    updateGroup(targetId, g => ({
+      ...g,
+      items: [...g.items, newItem]
+    }));
   };
 
-  const removeSong = (indexToRemove: number) => {
-    setItems((prev) => prev.filter((_, index) => index !== indexToRemove));
+  // Remove song from a specific group
+  const removeSong = (groupId: string, indexToRemove: number) => {
+    updateGroup(groupId, g => ({
+      ...g,
+      items: g.items.filter((_, index) => index !== indexToRemove)
+    }));
   };
 
   const resetRows = () => {
-    if (window.confirm("セットリストをリセットしますか？")) {
-      setItems([]);
+    if (window.confirm("全てのセットリストをリセットしますか？")) {
+      const newId = `g-${Date.now()}`;
+      const todays = LIVE_EVENTS.filter((e) => e.date === dateStr);
+      const initialTitle = todays.length > 0 ? todays[0].liveName : "";
+      const initialPlace = todays.length > 0 ? todays[0].place || "" : "";
+
+      setGroups([{ id: newId, title: initialTitle, place: initialPlace, items: [] }]);
+      setActiveGroupId(newId);
     }
   };
 
   const onDragEnd = (result: DropResult) => {
-    if (!result.destination) return;
-    const newItems = Array.from(items);
-    const [reorderedItem] = newItems.splice(result.source.index, 1);
-    newItems.splice(result.destination.index, 0, reorderedItem);
-    setItems(newItems);
+    const { source, destination } = result;
+    if (!destination) return;
+
+    if (source.droppableId === destination.droppableId) {
+      // Reordering within the same list
+      const groupIndex = groups.findIndex(g => g.id === source.droppableId);
+      if (groupIndex === -1) return;
+
+      const group = groups[groupIndex];
+      const newItems = Array.from(group.items);
+      const [reorderedItem] = newItems.splice(source.index, 1);
+      newItems.splice(destination.index, 0, reorderedItem);
+
+      const newGroups = [...groups];
+      newGroups[groupIndex] = { ...group, items: newItems };
+      setGroups(newGroups);
+    } else {
+      // Moving between lists
+      const sourceGroupIndex = groups.findIndex(g => g.id === source.droppableId);
+      const destGroupIndex = groups.findIndex(g => g.id === destination.droppableId);
+
+      if (sourceGroupIndex === -1 || destGroupIndex === -1) return;
+
+      const sourceGroup = groups[sourceGroupIndex];
+      const destGroup = groups[destGroupIndex];
+
+      const sourceItems = Array.from(sourceGroup.items);
+      const destItems = Array.from(destGroup.items);
+      const [movedItem] = sourceItems.splice(source.index, 1);
+      destItems.splice(destination.index, 0, movedItem);
+
+      const newGroups = [...groups];
+      newGroups[sourceGroupIndex] = { ...sourceGroup, items: sourceItems };
+      newGroups[destGroupIndex] = { ...destGroup, items: destItems };
+      setGroups(newGroups);
+      
+      setActiveGroupId(destGroup.id);
+    }
   };
 
-  // ツイート用テキストの自動生成
+  // Generate Tweet Text
   const tweetText = React.useMemo(() => {
     const [year, month, day] = dateStr.split("-");
-    
-    const selectedEvent = LIVE_EVENTS.find(
-      (e) => e.date === dateStr && e.liveName === selectedLiveName
-    );
+    const formattedDate = `🗓️${parseInt(month)}/${parseInt(day)}`;
 
-    const placePart = (includeLiveName && selectedEvent?.place) 
-      ? `📍${selectedEvent.place}\n` 
-      : " ";
+    let fullText = "";
 
-    const formattedDate = `🗓️${parseInt(month)}/${parseInt(day)}${placePart}`;
+    if (groups.length === 1) {
+        const g = groups[0];
+        const placePart = g.place ? `📍${g.place}\n` : " ";
+        fullText += `${formattedDate}${placePart}#キミそらセトリ\n\n`;
+        
+        if (g.title) fullText += `${g.title}\n\n`;
 
-    let songCount = 0;
-    const setlistText = items
-      .map((item) => {
-        if (item.name === "SE" || item.name === "MC") {
-          return item.name;
-        } else {
-          songCount++;
-          return `${songCount}. ${item.name}`;
-        }
-      })
-      .join("\n");
+        let songCount = 0;
+        const setlistText = g.items.map((item) => {
+            if (item.name === "SE" || item.name === "MC") {
+                return item.name;
+            } else {
+                songCount++;
+                return `${songCount}. ${item.name}`;
+            }
+        }).join("\n");
+        fullText += setlistText + "\n";
+    } else {
+        fullText += `${formattedDate} #キミそらセトリ\n\n`;
+        
+        groups.forEach((g) => {
+            if (g.items.length === 0 && !g.title) return;
 
-    const liveNamePart = (includeLiveName && selectedLiveName) 
-      ? `${selectedLiveName}\n\n` 
-      : "";
+            if (g.title) fullText += `【${g.title}】\n`;
+            if (g.place) fullText += `📍${g.place}\n`;
+            
+            let songCount = 0;
+            const list = g.items.map((item) => {
+                if (item.name === "SE" || item.name === "MC") {
+                    return item.name;
+                } else {
+                    songCount++;
+                    return `${songCount}. ${item.name}`;
+                }
+            }).join("\n");
+            fullText += list + "\n\n";
+        });
+    }
 
-    // ハッシュタグの前の改行調整
-    return `${formattedDate}#キミそらセトリ\n\n${liveNamePart}${setlistText}\n\n#キミそら #君と見るそら`;
-  }, [items, dateStr, includeLiveName, selectedLiveName]);
+    fullText += `#キミそら #君と見るそら`;
+    return fullText.trim();
+  }, [groups, dateStr]);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(tweetText).then(() => {
@@ -187,31 +281,30 @@ export default function App() {
     });
   };
 
-  // 選択状態を取得する関数（バッジ表示用）
   const getSelectionInfo = (songTitle: string) => {
-    const isSpecial = songTitle === "SE" || songTitle === "MC";
-    let normalCount = 0;
-    const indices: string[] = [];
+    const activeGroup = groups.find(g => g.id === activeGroupId);
+    if (!activeGroup) return null;
 
-    items.forEach((item) => {
-      if (item.name !== "SE" && item.name !== "MC") {
-        normalCount++;
-      }
+    if (songTitle === "SE" || songTitle === "MC") {
+        return activeGroup.items.some(item => item.name === songTitle) ? "✔" : null;
+    }
 
-      if (item.name === songTitle) {
-        if (isSpecial) {
-          indices.push("✔");
-        } else {
-          indices.push(String(normalCount));
+    let songCount = 0;
+    const positions: number[] = [];
+    
+    activeGroup.items.forEach((item) => {
+        if (item.name !== "SE" && item.name !== "MC") {
+            songCount++;
+            if (item.name === songTitle) {
+                positions.push(songCount);
+            }
         }
-      }
     });
 
-    if (indices.length === 0) return null;
-    return isSpecial ? indices.join("") : indices.join(", ");
+    if (positions.length === 0) return null;
+    return positions.join(",");
   };
 
-  // 画像生成処理（プレビュー用）
   const handleGeneratePreview = async () => {
     setIsGenerating(true);
     await new Promise(resolve => setTimeout(resolve, 100));
@@ -239,7 +332,6 @@ export default function App() {
     }
   };
 
-  // 画像保存処理
   const handleSaveImage = () => {
     if (!previewUrl) return;
     const link = document.createElement("a");
@@ -248,36 +340,55 @@ export default function App() {
     link.click();
   };
 
-  // シェア機能（スマホ用）
   const handleShareImage = async () => {
     if (!previewUrl) return;
-
     try {
-      // DataURLをBlobに変換
       const response = await fetch(previewUrl);
       const blob = await response.blob();
-      
-      // シェア用のファイルオブジェクト作成
       const file = new File([blob], `kimisora_setlist_${dateStr}.png`, { type: "image/png" });
-
-      // シェア実行
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         await navigator.share({
           files: [file],
-          text: tweetText, // テキストも一緒にシェアしようと試みる（アプリによる）
+          text: tweetText,
         });
       } else {
         alert("お使いの環境では画像のシェアに対応していません。\n画像を長押しして保存してください。");
       }
     } catch (error) {
-      // シェアがキャンセルされた場合などはここに来るが、基本は何もしない
       console.log("Share failed or canceled", error);
     }
   };
 
   const todaysLives = LIVE_EVENTS.filter((e) => e.date === dateStr);
-  const selectedEvent = LIVE_EVENTS.find(
-    (e) => e.date === dateStr && e.liveName === selectedLiveName
+
+  const addGroup = (title: string = "", place: string = "") => {
+      const newId = `g-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
+      setGroups(prev => [...prev, { id: newId, title, place, items: [] }]);
+      setActiveGroupId(newId);
+  };
+  
+  const removeGroup = (groupId: string) => {
+      if (groups.length <= 1) {
+          if (window.confirm("セットリストを空にしますか？")) {
+             setGroups([{ id: `g-${Date.now()}`, title: "", place: "", items: [] }]);
+             setActiveGroupId(groups[0].id);
+          }
+          return;
+      }
+      if (window.confirm("このセットリストを削除しますか？")) {
+          setGroups(prev => {
+              const next = prev.filter(g => g.id !== groupId);
+              if (activeGroupId === groupId && next.length > 0) {
+                  setActiveGroupId(next[0].id);
+              }
+              return next;
+          });
+      }
+  };
+
+  // その日の中でまだグループとして追加されていないライブ情報を抽出
+  const remainingLives = todaysLives.filter(
+      live => !groups.some(g => g.title === live.liveName)
   );
 
   return (
@@ -298,77 +409,17 @@ export default function App() {
           label="日付"
           type="date"
           value={dateStr}
-          onChange={(e) => setDateStr(e.target.value)}
+          onChange={(e) => handleDateChange(e.target.value)}
           size="small"
           InputLabelProps={{ shrink: true }}
         />
       </Box>
 
-      {/* ライブ情報選択エリア */}
-      {todaysLives.length > 0 && (
-        <Paper sx={{ p: 2, mb: 3, bgcolor: "#e3f2fd", borderColor: "#90caf9" }} variant="outlined">
-          <FormControlLabel
-            control={
-              <Checkbox 
-                checked={includeLiveName}
-                onChange={(e) => setIncludeLiveName(e.target.checked)}
-                color="primary"
-              />
-            }
-            label={
-              <Typography variant="subtitle1" fontWeight="bold">
-                この日のライブ情報をセトリに含める
-              </Typography>
-            }
-          />
-          
-          {includeLiveName && (
-            <Box sx={{ mt: 1, ml: 3 }}>
-              {todaysLives.length === 1 ? (
-                <Typography variant="body1" sx={{ p: 0.5 }}>
-                  {todaysLives[0].liveName}
-                  {todaysLives[0].place && (
-                    <Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 1 }}>
-                      📍{todaysLives[0].place}
-                    </Typography>
-                  )}
-                </Typography>
-              ) : (
-                <FormControl component="fieldset">
-                  <RadioGroup
-                    value={selectedLiveName}
-                    onChange={(e) => setSelectedLiveName(e.target.value)}
-                  >
-                    {todaysLives.map((live, idx) => (
-                      <FormControlLabel 
-                        key={idx}
-                        value={live.liveName}
-                        control={<Radio size="small" />}
-                        label={
-                          <Box component="span">
-                            {live.liveName}
-                            {live.place && (
-                              <Typography component="span" variant="caption" color="text.secondary" sx={{ ml: 1 }}>
-                                📍{live.place}
-                              </Typography>
-                            )}
-                          </Box>
-                        }
-                      />
-                    ))}
-                  </RadioGroup>
-                </FormControl>
-              )}
-            </Box>
-          )}
-        </Paper>
-      )}
-
-      {/* 楽曲ボタンエリア */}
-      <Paper sx={{ p: 2, mb: 4 }} variant="outlined">
-        <Box sx={{ mb: 2 }}>
+      {/* 楽曲ボタンエリア (Sticky Top) */}
+      <Paper sx={{ p: 2, pt: 3, mb: 2, position: 'sticky', top: 10, zIndex: 100, opacity: 0.98, boxShadow: 3 }} variant="outlined">
+        <Box sx={{ mb: 1 }}>
           <TextField
-            label="楽曲を検索（ひらがな・ローマ字OK）"
+            placeholder="楽曲を検索..."
             variant="standard"
             fullWidth
             value={filterText}
@@ -382,12 +433,13 @@ export default function App() {
             }}
           />
         </Box>
-
-        <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
-          タップして追加
+        <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
+            {groups.length > 1 
+                ? "選択中(青枠・展開中)のセットリストに追加されます" 
+                : "タップして追加"}
         </Typography>
         
-        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.5 }}>
+        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.5, maxHeight: '300px', overflowY: 'auto', pt: 1, px: 0.5 }}>
           {filteredSongs.length > 0 ? (
             filteredSongs.map((song) => {
               const selectionInfo = getSelectionInfo(song.title);
@@ -397,24 +449,13 @@ export default function App() {
                   badgeContent={selectionInfo} 
                   color="secondary"
                   invisible={!selectionInfo}
-                  sx={{ 
-                    '& .MuiBadge-badge': { 
-                      right: 5, 
-                      top: 5, 
-                      fontSize: '0.75rem',
-                      height: 'auto',
-                      minWidth: '20px',
-                      px: 0.5,
-                      py: 0.2
-                    } 
-                  }}
+                  sx={{ '& .MuiBadge-badge': { right: 5, top: 5 } }}
                 >
                   <Button
                     variant="outlined"
                     size="small"
                     onClick={() => addSong(song.title)}
-                    startIcon={<AddIcon />}
-                    sx={{ borderRadius: 10 }}
+                    sx={{ borderRadius: 10, px: 1.5, py: 0.5, fontSize: '0.8rem', minWidth: 'auto' }}
                   >
                     {song.title}
                   </Button>
@@ -422,15 +463,13 @@ export default function App() {
               );
             })
           ) : (
-            <Typography variant="caption" color="text.secondary" sx={{ width: '100%', textAlign: 'center', py: 2 }}>
-              見つかりませんでした。<br/>下の入力欄から追加できます。
-            </Typography>
+            <Typography variant="caption" color="text.secondary">見つかりません</Typography>
           )}
         </Box>
 
-        <Box sx={{ mt: 3, display: "flex", gap: 1 }}>
+        <Box sx={{ mt: 2, display: "flex", gap: 1 }}>
           <TextField
-            label="リストにない曲を追加"
+            label="自由入力"
             size="small"
             fullWidth
             value={customSong}
@@ -457,100 +496,233 @@ export default function App() {
         </Box>
       </Paper>
 
-      {/* セットリスト表示エリア */}
+      {/* セットリスト表示エリア (DragDropContext wraps all) */}
       <Box sx={{ my: 2 }}>
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "flex-end",
-            mb: 1,
-          }}
-        >
-          <Typography variant="h6">作成リスト</Typography>
-          <Button
-            color="error"
-            size="small"
-            onClick={resetRows}
-            disabled={items.length === 0}
-          >
-            リセット
-          </Button>
+        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", mb: 1 }}>
+          <Typography variant="h6">
+             {groups.length > 1 ? "作成中のリスト" : "作成リスト"}
+          </Typography>
+          <Button color="error" size="small" onClick={resetRows}>全てリセット</Button>
         </Box>
 
-        <TableContainer component={Paper} elevation={2}>
-          <DragDropContext onDragEnd={onDragEnd}>
-            <Droppable droppableId="setlist-droppable">
-              {(provided) => (
-                <Table
-                  size="small"
-                  ref={provided.innerRef}
-                  {...provided.droppableProps}
-                >
-                  <TableBody>
-                    {items.length === 0 && (
-                      <TableRow>
-                        <TableCell
-                          align="center"
-                          sx={{ py: 4, color: "text.secondary" }}
-                        >
-                          曲がまだありません。
-                          <br />
-                          上のボタンから追加してください。
-                        </TableCell>
-                      </TableRow>
-                    )}
-                    {items.map((item, index) => (
-                      <Draggable
-                        key={item.id}
-                        draggableId={item.id}
-                        index={index}
-                      >
-                        {(provided, snapshot) => (
-                          <TableRow
-                            ref={provided.innerRef}
-                            {...provided.draggableProps}
-                            sx={{
-                              backgroundColor: snapshot.isDragging
-                                ? "#f5f5f5"
-                                : "inherit",
-                              display: snapshot.isDragging
-                                ? "table"
-                                : undefined,
-                            }}
-                          >
-                            <TableCell
-                              width="40px"
-                              align="center"
-                              {...provided.dragHandleProps}
-                              sx={{ color: "text.secondary", cursor: "grab" }}
-                            >
-                              <DragHandleIcon fontSize="small" />
-                            </TableCell>
-                            <TableCell>
-                              <Typography variant="body1">
-                                {item.name}
-                              </Typography>
-                            </TableCell>
-                            <TableCell align="right" width="50px">
-                              <IconButton
-                                size="small"
-                                onClick={() => removeSong(index)}
-                              >
-                                <DeleteIcon fontSize="small" color="action" />
-                              </IconButton>
-                            </TableCell>
-                          </TableRow>
+        <DragDropContext onDragEnd={onDragEnd}>
+          <Stack spacing={2}>
+            {groups.map((group, groupIndex) => {
+                const isActive = activeGroupId === group.id;
+
+                return (
+                    <Paper 
+                        key={group.id} 
+                        elevation={isActive ? 4 : 1}
+                        sx={{ 
+                            p: 0, 
+                            border: isActive ? `2px solid ${theme.palette.primary.main}` : '1px solid #ddd',
+                            position: 'relative',
+                            overflow: 'hidden',
+                            transition: 'all 0.2s'
+                        }}
+                    >
+                        {/* Active Indicator Label */}
+                        {isActive && groups.length > 1 && (
+                            <Box sx={{ 
+                                position: 'absolute', right: 0, top: 0, 
+                                bgcolor: 'primary.main', color: 'white', 
+                                px: 1, py: 0.5, 
+                                borderBottomLeftRadius: 8, fontSize: '0.75rem', fontWeight: 'bold', zIndex: 1 
+                            }}>
+                                編集中
+                            </Box>
                         )}
-                      </Draggable>
-                    ))}
-                    {provided.placeholder}
-                  </TableBody>
-                </Table>
-              )}
-            </Droppable>
-          </DragDropContext>
-        </TableContainer>
+
+                        {/* Group Header (Click to Activate/Expand) */}
+                        <Box 
+                            sx={{ 
+                                p: 2, 
+                                bgcolor: isActive ? 'rgba(33, 150, 243, 0.05)' : '#fafafa', 
+                                borderBottom: isActive ? '1px solid #eee' : 'none',
+                                cursor: !isActive ? 'pointer' : 'default'
+                            }}
+                            onClick={() => !isActive && setActiveGroupId(group.id)}
+                        >
+                            <Stack direction="row" alignItems="center" spacing={1}>
+                                {groups.length > 1 && (
+                                    <Box 
+                                        sx={{ 
+                                            width: 24, height: 24, borderRadius: '50%', 
+                                            bgcolor: isActive ? 'primary.main' : 'grey.400', 
+                                            color: 'white', 
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center', 
+                                            fontSize: '0.8rem', fontWeight: 'bold',
+                                            flexShrink: 0
+                                        }}
+                                    >
+                                        {groupIndex + 1}
+                                    </Box>
+                                )}
+                                <Box sx={{ flexGrow: 1 }}>
+                                    <Stack direction="row" alignItems="center" justifyContent="space-between">
+                                        {/* Title Input */}
+                                        <TextField 
+                                            variant="standard"
+                                            placeholder={groups.length > 1 ? "ライブ名 (例: 1部)" : "ライブ名 (任意)"}
+                                            value={group.title}
+                                            onChange={(e) => updateGroup(group.id, g => ({ ...g, title: e.target.value }))}
+                                            fullWidth
+                                            InputProps={{ 
+                                                disableUnderline: !isActive,
+                                                style: { fontWeight: 'bold', fontSize: '1.1rem', color: isActive ? 'inherit' : '#555' },
+                                                endAdornment: (isActive && group.title) ? (
+                                                    <InputAdornment position="end">
+                                                        <IconButton size="small" onClick={() => updateGroup(group.id, g => ({ ...g, title: "" }))}>
+                                                            <ClearIcon fontSize="small" />
+                                                        </IconButton>
+                                                    </InputAdornment>
+                                                ) : null
+                                            }}
+                                            onClick={(e) => e.stopPropagation()} // Prevent triggering expand on input click
+                                        />
+                                        
+                                        {/* Expand/Collapse Icon for non-active items */}
+                                        {!isActive && (
+                                            <ExpandMoreIcon color="action" />
+                                        )}
+                                        {isActive && groups.length > 1 && (
+                                            <ExpandLessIcon color="primary" />
+                                        )}
+                                    </Stack>
+
+                                    {/* Place Input */}
+                                    <TextField 
+                                        variant="standard"
+                                        placeholder="場所 (例: Zepp Shinjuku)"
+                                        value={group.place}
+                                        onChange={(e) => updateGroup(group.id, g => ({ ...g, place: e.target.value }))}
+                                        fullWidth
+                                        size="small"
+                                        sx={{ mt: 0.5, display: (isActive || group.place) ? 'block' : 'none' }}
+                                        InputProps={{ 
+                                            disableUnderline: !isActive,
+                                            startAdornment: <InputAdornment position="start">📍</InputAdornment>,
+                                            style: { fontSize: '0.9rem', color: '#666' },
+                                            endAdornment: (isActive && group.place) ? (
+                                                <InputAdornment position="end">
+                                                    <IconButton size="small" onClick={() => updateGroup(group.id, g => ({ ...g, place: "" }))}>
+                                                        <ClearIcon fontSize="small" />
+                                                    </IconButton>
+                                                </InputAdornment>
+                                            ) : null
+                                        }}
+                                        onClick={(e) => e.stopPropagation()}
+                                    />
+                                </Box>
+                                
+                                {groups.length > 1 && isActive && (
+                                    <IconButton size="small" onClick={(e) => { e.stopPropagation(); removeGroup(group.id); }}>
+                                        <CloseIcon />
+                                    </IconButton>
+                                )}
+                            </Stack>
+                        </Box>
+
+                        {/* Droppable Area (Accordion Content) */}
+                        <Collapse in={isActive} timeout="auto" unmountOnExit={false}>
+                            <Droppable droppableId={group.id}>
+                            {(provided) => (
+                                <Table
+                                size="small"
+                                ref={provided.innerRef}
+                                {...provided.droppableProps}
+                                >
+                                <TableBody>
+                                    {group.items.length === 0 && (
+                                    <TableRow>
+                                        <TableCell align="center" sx={{ py: 3, color: "text.secondary", borderBottom: 'none' }}>
+                                        曲がありません。<br/>上のリストから曲を追加してください。
+                                        </TableCell>
+                                    </TableRow>
+                                    )}
+                                    {group.items.map((item, index) => (
+                                    <Draggable
+                                        key={item.id}
+                                        draggableId={item.id}
+                                        index={index}
+                                    >
+                                        {(provided, snapshot) => (
+                                        <TableRow
+                                            ref={provided.innerRef}
+                                            {...provided.draggableProps}
+                                            sx={{
+                                            backgroundColor: snapshot.isDragging ? "#f5f5f5" : "inherit",
+                                            display: snapshot.isDragging ? "table" : undefined,
+                                            }}
+                                        >
+                                            <TableCell
+                                            width="40px"
+                                            align="center"
+                                            {...provided.dragHandleProps}
+                                            sx={{ color: "text.secondary", cursor: "grab" }}
+                                            >
+                                            <DragHandleIcon fontSize="small" />
+                                            </TableCell>
+                                            <TableCell>
+                                                <Typography variant="body1">
+                                                    {item.name}
+                                                </Typography>
+                                            </TableCell>
+                                            <TableCell align="right" width="50px">
+                                            <IconButton
+                                                size="small"
+                                                onClick={(e) => { e.stopPropagation(); removeSong(group.id, index); }}
+                                            >
+                                                <DeleteIcon fontSize="small" color="action" />
+                                            </IconButton>
+                                            </TableCell>
+                                        </TableRow>
+                                        )}
+                                    </Draggable>
+                                    ))}
+                                    {provided.placeholder}
+                                </TableBody>
+                                </Table>
+                            )}
+                            </Droppable>
+                        </Collapse>
+                    </Paper>
+                );
+            })}
+            
+            {/* 新しいセットリストを追加するセクション */}
+            <Box sx={{ pt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                {remainingLives.length > 0 && (
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                        {remainingLives.map((live, idx) => (
+                            <Button
+                                key={idx}
+                                variant="outlined"
+                                color="warning"
+                                onClick={() => addGroup(live.liveName, live.place || "")}
+                                startIcon={<AddIcon />}
+                                fullWidth
+                            >
+                                【{live.liveName}】を追加
+                            </Button>
+                        ))}
+                    </Box>
+                )}
+                
+                <Button 
+                    variant="outlined" 
+                    sx={{ border: '2px dashed #ccc', color: '#888', py: 1.5 }} 
+                    onClick={() => addGroup("", "")}
+                    startIcon={<AddIcon />}
+                    fullWidth
+                >
+                    自由入力でセットリストを追加
+                </Button>
+            </Box>
+
+          </Stack>
+        </DragDropContext>
       </Box>
 
       {/* アクションエリア */}
@@ -566,7 +738,6 @@ export default function App() {
           InputProps={{ readOnly: true }}
         />
         
-        {/* スマホの場合は縦積み、PCの場合は横並び */}
         <Stack direction={isMobile ? "column" : "row"} spacing={2} justifyContent="center">
            <Button
             variant="outlined"
@@ -575,7 +746,7 @@ export default function App() {
             onClick={handleGeneratePreview}
             fullWidth
             size="large"
-            disabled={items.length === 0 || isGenerating}
+            disabled={groups.every(g => g.items.length === 0) || isGenerating}
           >
             {isGenerating ? "生成中..." : "画像生成"}
           </Button>
@@ -622,7 +793,6 @@ export default function App() {
             elevation={0}
             sx={{
                 width: "600px", 
-                minWidth: "600px",
                 minHeight: "600px",
                 p: 5,
                 borderRadius: 4,
@@ -633,28 +803,8 @@ export default function App() {
             }}
             >
             {/* 装飾 */}
-            <Box
-                sx={{
-                position: "absolute",
-                top: -60,
-                right: -60,
-                width: 200,
-                height: 200,
-                borderRadius: "50%",
-                bgcolor: "rgba(255,255,255,0.4)",
-                }}
-            />
-            <Box
-                sx={{
-                position: "absolute",
-                bottom: -40,
-                left: -40,
-                width: 150,
-                height: 150,
-                borderRadius: "50%",
-                bgcolor: "rgba(255,255,255,0.4)",
-                }}
-            />
+            <Box sx={{ position: "absolute", top: -60, right: -60, width: 200, height: 200, borderRadius: "50%", bgcolor: "rgba(255,255,255,0.4)" }} />
+            <Box sx={{ position: "absolute", bottom: -40, left: -40, width: 150, height: 150, borderRadius: "50%", bgcolor: "rgba(255,255,255,0.4)" }} />
 
             {/* コンテンツ */}
             <Box sx={{ position: "relative", zIndex: 1, textAlign: 'center' }}>
@@ -662,58 +812,85 @@ export default function App() {
                 {dateStr.replace(/-/g, '.')}
                 </Typography>
                 
-                {includeLiveName && selectedLiveName && (
                 <Box sx={{ mb: 3 }}>
-                    <Typography variant="h4" sx={{ fontWeight: "900", color: "#424242", lineHeight: 1.3 }}>
-                    {selectedLiveName}
-                    </Typography>
-                    {includeLiveName && selectedEvent?.place && (
+                    {(groups.length === 1 && groups[0].title) && (
+                         <Typography variant="h4" sx={{ fontWeight: "900", color: "#424242", lineHeight: 1.3 }}>
+                            {groups[0].title}
+                         </Typography>
+                    )}
+                    {(groups.length === 1 && groups[0].place) && (
                         <Typography variant="h6" sx={{ color: "#757575", mt: 1, fontWeight: 'normal' }}>
-                        @ {selectedEvent.place}
+                            @ {groups[0].place}
                         </Typography>
                     )}
                 </Box>
-                )}
                 
-                <Box sx={{ width: '60%', height: '3px', bgcolor: 'primary.main', mx: 'auto', mb: 4, opacity: 0.6, borderRadius: 2 }} />
+                {groups.length === 1 && (
+                     <Box sx={{ width: '60%', height: '3px', bgcolor: 'primary.main', mx: 'auto', mb: 4, opacity: 0.6, borderRadius: 2 }} />
+                )}
 
-                <Stack spacing={2} sx={{ textAlign: 'left', mx: 4 }}>
-                {items.map((item, index) => {
-                    const isSpecial = item.name === "MC" || item.name === "SE";
-                    let count = 0;
-                    for(let i=0; i<index; i++) {
-                        if(items[i].name !== "MC" && items[i].name !== "SE") count++;
-                    }
-                    const displayNum = isSpecial ? "" : `${String(count + 1).padStart(2, '0')}.`;
+                <Stack spacing={4} sx={{ textAlign: 'left', mx: 4 }}>
+                    {groups.map((group, gIdx) => {
+                        if (group.items.length === 0 && !group.title) return null;
 
-                    return (
-                    <Box key={item.id} sx={{ display: 'flex', alignItems: 'baseline' }}>
-                        <Typography 
-                        sx={{ 
-                            width: '40px', 
-                            fontWeight: '900', 
-                            color: 'primary.main',
-                            fontSize: isSpecial ? '1rem' : '1.4rem',
-                            mr: 1,
-                            textAlign: 'right',
-                            fontFamily: 'Roboto, Helvetica, Arial, sans-serif'
-                        }}
-                        >
-                        {displayNum}
-                        </Typography>
-                        <Typography 
-                        sx={{ 
-                            fontWeight: isSpecial ? 'normal' : 'bold',
-                            color: isSpecial ? 'text.secondary' : 'text.primary',
-                            fontSize: isSpecial ? '1.1rem' : '1.5rem',
-                            lineHeight: 1.2
-                        }}
-                        >
-                        {item.name}
-                        </Typography>
-                    </Box>
-                    );
-                })}
+                        return (
+                            <Box key={group.id}>
+                                {groups.length > 1 && (
+                                    <Box sx={{ mb: 2, textAlign: 'center', borderBottom: '2px dashed #90caf9', pb: 1 }}>
+                                        {group.title && (
+                                            <Typography variant="h5" sx={{ fontWeight: "bold", color: "#1565c0" }}>
+                                                {group.title}
+                                            </Typography>
+                                        )}
+                                        {group.place && (
+                                            <Typography variant="body2" sx={{ color: "#666" }}>
+                                                @ {group.place}
+                                            </Typography>
+                                        )}
+                                    </Box>
+                                )}
+
+                                <Stack spacing={1.5}>
+                                    {group.items.map((item, index) => {
+                                        const isSpecial = item.name === "MC" || item.name === "SE";
+                                        let count = 0;
+                                        for(let i=0; i<index; i++) {
+                                            if(group.items[i].name !== "MC" && group.items[i].name !== "SE") count++;
+                                        }
+                                        const displayNum = isSpecial ? "" : `${String(count + 1).padStart(2, '0')}.`;
+
+                                        return (
+                                            <Box key={item.id} sx={{ display: 'flex', alignItems: 'baseline' }}>
+                                                <Typography 
+                                                sx={{ 
+                                                    width: '40px', 
+                                                    fontWeight: '900', 
+                                                    color: 'primary.main',
+                                                    fontSize: isSpecial ? '1rem' : '1.4rem',
+                                                    mr: 1,
+                                                    textAlign: 'right',
+                                                    fontFamily: 'Roboto, Helvetica, Arial, sans-serif'
+                                                }}
+                                                >
+                                                {displayNum}
+                                                </Typography>
+                                                <Typography 
+                                                sx={{ 
+                                                    fontWeight: isSpecial ? 'normal' : 'bold',
+                                                    color: isSpecial ? 'text.secondary' : 'text.primary',
+                                                    fontSize: isSpecial ? '1.1rem' : '1.5rem',
+                                                    lineHeight: 1.2
+                                                }}
+                                                >
+                                                {item.name}
+                                                </Typography>
+                                            </Box>
+                                        );
+                                    })}
+                                </Stack>
+                            </Box>
+                        );
+                    })}
                 </Stack>
                 
                 <Box sx={{ mt: 5, pt: 2, borderTop: '2px dashed #bdbdbd' }}>
@@ -767,8 +944,6 @@ export default function App() {
         </DialogContent>
         <DialogActions sx={{ justifyContent: 'center', pb: 3, px: 3 }}>
           <Stack direction="column" spacing={2} width="100%">
-            
-            {/* スマホかつシェア機能が使える場合のみ「画像をシェア」ボタンを表示 */}
             {isMobile && canShare && (
               <Button 
                 variant="contained" 
@@ -783,7 +958,6 @@ export default function App() {
               </Button>
             )}
 
-            {/* PCの場合は保存ボタンを表示 */}
             {!isMobile && (
               <Button 
                   variant="contained" 
