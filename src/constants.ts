@@ -70,27 +70,27 @@ export const SONG_LIST: Song[] = [
 
 export const MUSIC_LIST = SONG_LIST.map((s) => s.title);
 
-// ★追加：ライブ情報の定義
+// ★変更：LiveEventにplaceを追加
 export type LiveEvent = {
   date: string;     // YYYY-MM-DD形式
   liveName: string;
+  place?: string;   // 会場名（任意）
 };
 
-// ライブ予定はここから: https://timetreeapp.com/public_calendars/kimisora
-// { date: "", liveName: "\n📍" },
+// ライブ予定
 export const LIVE_EVENTS: LiveEvent[] = [
   { date: "2026-01-03", liveName: "「アイドル甲子園 in clubasia」-DAY2-" },
   { date: "2026-01-03", liveName: "IDOL ∞ INFINITY 新春SP" },
-  { date: "2026-01-15", liveName: "MARQUEE祭 Vol.168\n📍Spotify O-WEST" },
-  { date: "2026-01-16", liveName: "→Taria.Presents 「NexTime vol.2\n📍白金高輪SELENE b2" },
-  { date: "2026-01-17", liveName: "アイドルマリアージュVol.43\n📍有明 スモールワールズ" },
+  { date: "2026-01-15", liveName: "MARQUEE祭 Vol.168", place: "Spotify O-WEST" },
+  { date: "2026-01-16", liveName: "→Taria.Presents 「NexTime vol.2」", place: "白金高輪SELENE b2" },
+  { date: "2026-01-17", liveName: "アイドルマリアージュVol.43", place: "有明 スモールワールズ" },
   { date: "2026-01-18", liveName: "渋谷JACK～NEWYEAR SP～" },
-  { date: "2026-01-28", liveName: "GIGA•GIGA SONIC presented by UtaTen / チェキチャ\n📍duo MUSIC EXCHANGE" },
-  { date: "2026-01-30", liveName: "新塘真理 BIRTHDAY LIVE 2026\n📍SHIBUYA DIVE" },
+  { date: "2026-01-28", liveName: "GIGA•GIGA SONIC presented by UtaTen / チェキチャ", place: "duo MUSIC EXCHANGE" },
+  { date: "2026-01-30", liveName: "新塘真理 BIRTHDAY LIVE 2026", place: "SHIBUYA DIVE" },
   { date: "2026-01-31", liveName: "「アイドル甲子園 in KANDA SQUARE HALL」DAY1" },
   { date: "2026-02-01", liveName: "「アイドル甲子園 in KANDA SQUARE HALL」DAY2" },
   { date: "2026-02-02", liveName: "TOKYO GIRLS GIRLS" },
-  { date: "2026-02-03", liveName: "GIGA•GIGA SONIC\n📍Zepp Shinjuku" },
-  { date: "2026-02-07", liveName: "LEADING WINTER\n📍KANDA SQUARE HALL" },
-  { date: "2026-02-15", liveName: "MARQUEE祭mini Vol.300\n📍Spotify O-nest" },
+  { date: "2026-02-03", liveName: "GIGA•GIGA SONIC", place: "Zepp Shinjuku" },
+  { date: "2026-02-07", liveName: "LEADING WINTER", place: "KANDA SQUARE HALL" },
+  { date: "2026-02-15", liveName: "MARQUEE祭mini Vol.300", place: "Spotify O-nest" },
 ];

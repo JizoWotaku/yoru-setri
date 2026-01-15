@@ -16,11 +16,11 @@ import {
   Alert,
   Snackbar,
   InputAdornment,
-  Checkbox,       // 追加
-  FormControl,    // 追加
-  FormControlLabel, // 追加
-  Radio,          // 追加
-  RadioGroup,     // 追加
+  Checkbox,
+  FormControl,
+  FormControlLabel,
+  Radio,
+  RadioGroup,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -28,7 +28,7 @@ import DragHandleIcon from "@mui/icons-material/DragHandle";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import TwitterIcon from "@mui/icons-material/Twitter";
 import SearchIcon from "@mui/icons-material/Search";
-import { SONG_LIST, LIVE_EVENTS } from "./constants"; // LIVE_EVENTSを追加インポート
+import { SONG_LIST, LIVE_EVENTS } from "./constants";
 
 import {
   DragDropContext,
@@ -70,7 +70,6 @@ export default function App() {
 
   // 日付が変わった時にライブ情報を検索してセットする
   React.useEffect(() => {
-    // 選択された日付にマッチするライブを検索
     const todaysLives = LIVE_EVENTS.filter((e) => e.date === dateStr);
     
     if (todaysLives.length > 0) {
@@ -120,7 +119,20 @@ export default function App() {
   // ツイート用テキストの自動生成
   const tweetText = React.useMemo(() => {
     const [year, month, day] = dateStr.split("-");
-    const formattedDate = `🗓️${parseInt(month)}/${parseInt(day)}`;
+    
+    // 現在選択されているライブ情報を取得（場所情報を取得するため）
+    const selectedEvent = LIVE_EVENTS.find(
+      (e) => e.date === dateStr && e.liveName === selectedLiveName
+    );
+
+    // 場所情報の文字列を作成
+    // チェックが入っていて、かつ場所情報がある場合のみ表示
+    const placePart = (includeLiveName && selectedEvent?.place) 
+      ? `📍${selectedEvent.place}` 
+      : "";
+
+    // ご要望のフォーマット: 日付 + 場所 + 改行
+    const formattedDate = `🗓️${parseInt(month)}/${parseInt(day)}${placePart}\n`;
 
     let songCount = 0;
     const setlistText = items
@@ -139,7 +151,8 @@ export default function App() {
       ? `${selectedLiveName}\n\n` 
       : "";
 
-    return `${formattedDate} #キミそらセトリ\n\n${liveNamePart}${setlistText}\n\n#キミそら #君と見るそら`;
+    // ハッシュタグの前の改行は、formattedDateに\nが含まれているため、ここでは調整しています
+    return `${formattedDate}#キミそらセトリ\n\n${liveNamePart}${setlistText}\n\n#キミそら #君と見るそら`;
   }, [items, dateStr, includeLiveName, selectedLiveName]);
 
   const handleCopy = () => {
@@ -175,7 +188,7 @@ export default function App() {
         />
       </Box>
 
-      {/* ★追加：ライブ情報選択エリア */}
+      {/* ライブ情報選択エリア */}
       {todaysLives.length > 0 && (
         <Paper sx={{ p: 2, mb: 3, bgcolor: "#e3f2fd", borderColor: "#90caf9" }} variant="outlined">
           <FormControlLabel
@@ -188,7 +201,7 @@ export default function App() {
             }
             label={
               <Typography variant="subtitle1" fontWeight="bold">
-                この日のライブ名をセトリに含める
+                この日のライブ情報をセトリに含める
               </Typography>
             }
           />
@@ -199,6 +212,11 @@ export default function App() {
                 // ライブが1つの場合はテキスト表示のみ
                 <Typography variant="body1" sx={{ p: 0.5 }}>
                   {todaysLives[0].liveName}
+                  {todaysLives[0].place && (
+                    <Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 1 }}>
+                      📍{todaysLives[0].place}
+                    </Typography>
+                  )}
                 </Typography>
               ) : (
                 // ライブが複数の場合はラジオボタンで選択
@@ -212,7 +230,16 @@ export default function App() {
                         key={idx}
                         value={live.liveName}
                         control={<Radio size="small" />}
-                        label={live.liveName}
+                        label={
+                          <Box component="span">
+                            {live.liveName}
+                            {live.place && (
+                              <Typography component="span" variant="caption" color="text.secondary" sx={{ ml: 1 }}>
+                                📍{live.place}
+                              </Typography>
+                            )}
+                          </Box>
+                        }
                       />
                     ))}
                   </RadioGroup>
