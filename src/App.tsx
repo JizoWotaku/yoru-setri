@@ -27,6 +27,7 @@ import {
   DialogActions,
   useMediaQuery,
   useTheme,
+  Badge,
   CircularProgress,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
@@ -84,10 +85,9 @@ export default function App() {
 
   // 画像プレビューモーダルの状態
   const [openImageDialog, setOpenImageDialog] = React.useState(false);
-  
-  // 生成された画像のURL
+
+  // 画像生成関連の状態
   const [previewUrl, setPreviewUrl] = React.useState<string | null>(null);
-  // 画像生成中フラグ
   const [isGenerating, setIsGenerating] = React.useState(false);
 
   // 日付が変わった時にライブ情報を検索してセットする
@@ -176,10 +176,37 @@ export default function App() {
     });
   };
 
-  // 画像生成処理
+  // 選択状態を取得する関数（バッジ表示用）
+  const getSelectionInfo = (songTitle: string) => {
+    const isSpecial = songTitle === "SE" || songTitle === "MC";
+    let normalCount = 0;
+    const indices: string[] = [];
+
+    items.forEach((item) => {
+      // MC/SE以外をカウント（プレビュー側のロジックと合わせる）
+      if (item.name !== "SE" && item.name !== "MC") {
+        normalCount++;
+      }
+
+      if (item.name === songTitle) {
+        if (isSpecial) {
+          indices.push("✔");
+        } else {
+          indices.push(String(normalCount));
+        }
+      }
+    });
+
+    if (indices.length === 0) return null;
+    
+    // SE/MCは連結（✔✔）、それ以外はカンマ区切り（1, 3）
+    return isSpecial ? indices.join("") : indices.join(", ");
+  };
+
+  // 画像生成処理（プレビュー用）
   const handleGeneratePreview = async () => {
     setIsGenerating(true);
-    // 描画更新を待つために少し遅延
+    // 描画更新待ち
     await new Promise(resolve => setTimeout(resolve, 100));
 
     const element = document.getElementById("setlist-image-card");
@@ -205,7 +232,7 @@ export default function App() {
     }
   };
 
-  // 画像保存処理（生成済みのURLを使用）
+  // 画像保存処理
   const handleSaveImage = () => {
     if (!previewUrl) return;
     const link = document.createElement("a");
@@ -326,20 +353,40 @@ export default function App() {
           タップして追加
         </Typography>
         
-        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.5 }}>
           {filteredSongs.length > 0 ? (
-            filteredSongs.map((song) => (
-              <Button
-                key={song.title}
-                variant="outlined"
-                size="small"
-                onClick={() => addSong(song.title)}
-                startIcon={<AddIcon />}
-                sx={{ borderRadius: 10 }}
-              >
-                {song.title}
-              </Button>
-            ))
+            filteredSongs.map((song) => {
+              const selectionInfo = getSelectionInfo(song.title);
+              return (
+                <Badge 
+                  key={song.title} 
+                  badgeContent={selectionInfo} 
+                  color="secondary"
+                  invisible={!selectionInfo}
+                  sx={{ 
+                    '& .MuiBadge-badge': { 
+                      right: 5, 
+                      top: 5, 
+                      fontSize: '0.75rem',
+                      height: 'auto',
+                      minWidth: '20px',
+                      px: 0.5,
+                      py: 0.2
+                    } 
+                  }}
+                >
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    onClick={() => addSong(song.title)}
+                    startIcon={<AddIcon />}
+                    sx={{ borderRadius: 10 }}
+                  >
+                    {song.title}
+                  </Button>
+                </Badge>
+              );
+            })
           ) : (
             <Typography variant="caption" color="text.secondary" sx={{ width: '100%', textAlign: 'center', py: 2 }}>
               見つかりませんでした。<br/>下の入力欄から追加できます。
@@ -472,7 +519,7 @@ export default function App() {
         </TableContainer>
       </Box>
 
-      {/* アクションエリア（ボタン群の改善） */}
+      {/* アクションエリア */}
       <Paper sx={{ p: 2, mt: 4, bgcolor: "#f8f9fa" }} elevation={0}>
         <TextField
           label="ツイート内容プレビュー"
@@ -534,10 +581,7 @@ export default function App() {
         </Alert>
       </Snackbar>
 
-      {/* ★ 隠し描画エリア ★
-        画面外に配置して、ユーザーには見せないが、html2canvasでキャプチャするために存在させる。
-        固定幅(600px)にすることで、デバイスに関わらず同じレイアウトで画像を生成できる。
-      */}
+      {/* 隠し描画エリア（画像生成元） */}
       <Box sx={{ position: "fixed", top: 0, left: "-2000px", zIndex: -1 }}>
         <Paper
             id="setlist-image-card"
@@ -554,7 +598,7 @@ export default function App() {
                 boxSizing: 'border-box'
             }}
             >
-            {/* 装飾用の円 */}
+            {/* 装飾 */}
             <Box
                 sx={{
                 position: "absolute",
@@ -580,12 +624,10 @@ export default function App() {
 
             {/* コンテンツ */}
             <Box sx={{ position: "relative", zIndex: 1, textAlign: 'center' }}>
-                {/* 日付 */}
                 <Typography variant="h5" sx={{ color: "#0277bd", fontWeight: "bold", mb: 0.5, letterSpacing: 2 }}>
                 {dateStr.replace(/-/g, '.')}
                 </Typography>
                 
-                {/* ライブ名 */}
                 {includeLiveName && selectedLiveName && (
                 <Box sx={{ mb: 3 }}>
                     <Typography variant="h4" sx={{ fontWeight: "900", color: "#424242", lineHeight: 1.3 }}>
@@ -601,7 +643,6 @@ export default function App() {
                 
                 <Box sx={{ width: '60%', height: '3px', bgcolor: 'primary.main', mx: 'auto', mb: 4, opacity: 0.6, borderRadius: 2 }} />
 
-                {/* セトリ（リスト表示） */}
                 <Stack spacing={2} sx={{ textAlign: 'left', mx: 4 }}>
                 {items.map((item, index) => {
                     const isSpecial = item.name === "MC" || item.name === "SE";
@@ -643,7 +684,7 @@ export default function App() {
                 
                 <Box sx={{ mt: 5, pt: 2, borderTop: '2px dashed #bdbdbd' }}>
                 <Typography variant="body1" sx={{ color: "#757575", display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, fontWeight: 'bold' }}>
-                    #キミそらセトリ
+                    <TwitterIcon fontSize="inherit" /> #キミそらセトリ
                 </Typography>
                 </Box>
             </Box>
@@ -669,10 +710,11 @@ export default function App() {
             }}
         >
             <Typography variant="caption" sx={{ mb: 2, textAlign: 'center' }}>
-                ※保存ボタンが効かない場合は画像を長押しして保存してください
+                {isMobile 
+                  ? "画像を長押しして保存してください" 
+                  : "※保存ボタンが効かない場合は画像を長押しして保存してください"}
             </Typography>
 
-            {/* 生成された画像を表示 (スマホでは幅に合わせて縮小される) */}
             {previewUrl ? (
                 <img 
                     src={previewUrl} 
@@ -691,16 +733,19 @@ export default function App() {
         </DialogContent>
         <DialogActions sx={{ justifyContent: 'center', pb: 3, px: 3 }}>
           <Stack direction="column" spacing={2} width="100%">
-            <Button 
-                variant="contained" 
-                onClick={handleSaveImage}
-                startIcon={<DownloadIcon />}
-                size="large"
-                fullWidth
-                sx={{ borderRadius: 10, fontWeight: 'bold', py: 1.5 }}
-            >
-                画像を保存
-            </Button>
+            {/* スマホの場合は保存ボタンを表示しない */}
+            {!isMobile && (
+              <Button 
+                  variant="contained" 
+                  onClick={handleSaveImage}
+                  startIcon={<DownloadIcon />}
+                  size="large"
+                  fullWidth
+                  sx={{ borderRadius: 10, fontWeight: 'bold', py: 1.5 }}
+              >
+                  画像を保存
+              </Button>
+            )}
             <Button onClick={() => setOpenImageDialog(false)} fullWidth sx={{ color: 'text.secondary' }}>
                 閉じる
             </Button>
