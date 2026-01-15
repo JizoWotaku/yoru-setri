@@ -120,7 +120,7 @@ export default function App() {
   // ツイート用テキストの自動生成
   const tweetText = React.useMemo(() => {
     const [year, month, day] = dateStr.split("-");
-    const formattedDate = `${parseInt(month)}/${parseInt(day)}`;
+    const formattedDate = `🗓️${parseInt(month)}/${parseInt(day)}`;
 
     let songCount = 0;
     const setlistText = items
