@@ -718,7 +718,7 @@ export default function App() {
                 
                 <Box sx={{ mt: 5, pt: 2, borderTop: '2px dashed #bdbdbd' }}>
                 <Typography variant="body1" sx={{ color: "#757575", display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, fontWeight: 'bold' }}>
-                    <TwitterIcon fontSize="inherit" /> #キミそらセトリ
+                    #キミそらセトリ
                 </Typography>
                 </Box>
             </Box>
