@@ -299,8 +299,9 @@ export default function App() {
     if (groups.length === 1) {
         const g = groups[0];
         const placePart = g.place ? `📍${g.place}\n` : " ";
-        fullText += `${formattedDate}${placePart}#キミそらセトリ\n\n`;
-        if (g.title) fullText += `${g.title}\n\n`;
+        fullText += `${formattedDate}${placePart}`;
+        if (g.title) fullText += `『${g.title}』\n`;
+        fullText += "#キミそらセトリ\n\n";
         let songCount = 0;
         const setlistText = g.items.map((item) => {
             const isSpecial = item.name === "SE" || item.name === "MC" || item.name === ENCORE_NAME;
@@ -312,7 +313,7 @@ export default function App() {
         fullText += `${formattedDate} #キミそらセトリ\n\n`;
         groups.forEach((g) => {
             if (g.items.length === 0 && !g.title) return;
-            if (g.title) fullText += `【${g.title}】\n`;
+            if (g.title) fullText += `『${g.title}』\n`;
             if (g.place) fullText += `📍${g.place}\n`;
             let songCount = 0;
             const list = g.items.map((item) => {
