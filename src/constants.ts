@@ -85,6 +85,7 @@ export const LIVE_EVENTS: LiveEvent[] = [
   { date: "2026-01-16", liveName: "→Taria.Presents 「NexTime vol.2」", place: "白金高輪SELENE b2" },
   { date: "2026-01-17", liveName: "アイドルマリアージュVol.43", place: "有明 スモールワールズ" },
   { date: "2026-01-18", liveName: "渋谷JACK～NEWYEAR SP～", place: "渋谷VIDENT" },
+  { date: "2026-01-26", liveName: "君と見るそら 定期公演 vol.0", place: "カラオケまねきねこ渋谷本店"},
   { date: "2026-01-28", liveName: "GIGA•GIGA SONIC presented by UtaTen / チェキチャ", place: "duo MUSIC EXCHANGE" },
   { date: "2026-01-30", liveName: "新塘真理 BIRTHDAY LIVE 2026", place: "SHIBUYA DIVE" },
   { date: "2026-01-31", liveName: "「アイドル甲子園 in KANDA SQUARE HALL」DAY1" },
@@ -93,4 +94,5 @@ export const LIVE_EVENTS: LiveEvent[] = [
   { date: "2026-02-03", liveName: "GIGA•GIGA SONIC", place: "Zepp Shinjuku" },
   { date: "2026-02-07", liveName: "LEADING WINTER", place: "KANDA SQUARE HALL" },
   { date: "2026-02-15", liveName: "MARQUEE祭mini Vol.300", place: "Spotify O-nest" },
+  { date: "2026-03-01", liveName: "「アイドル甲子園 in KANDA SQUARE HALL」-DAY2-" },
 ];
