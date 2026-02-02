@@ -78,6 +78,7 @@ export type LiveEvent = {
 };
 
 // ライブ予定
+// { date: "2026-", liveName: "", place: "" },
 export const LIVE_EVENTS: LiveEvent[] = [
   { date: "2026-01-03", liveName: "「アイドル甲子園 in clubasia」-DAY2-" },
   { date: "2026-01-03", liveName: "IDOL ∞ INFINITY 新春SP" },
@@ -90,9 +91,14 @@ export const LIVE_EVENTS: LiveEvent[] = [
   { date: "2026-01-30", liveName: "新塘真理 BIRTHDAY LIVE 2026", place: "SHIBUYA DIVE" },
   { date: "2026-01-31", liveName: "「アイドル甲子園 in KANDA SQUARE HALL」DAY1" },
   { date: "2026-02-01", liveName: "「アイドル甲子園 in KANDA SQUARE HALL」DAY2" },
-  { date: "2026-02-02", liveName: "TOKYO GIRLS GIRLS" },
+  { date: "2026-02-02", liveName: "TOKYO GIRLS GIRLS", place: "Spotify O-Crest" },
   { date: "2026-02-03", liveName: "GIGA•GIGA SONIC", place: "Zepp Shinjuku" },
+  { date: "2026-02-05", liveName: "君と見るそら 定期公演 vol.1", place: "カラオケまねきねこ渋谷本店" },
   { date: "2026-02-07", liveName: "LEADING WINTER", place: "KANDA SQUARE HALL" },
+  { date: "2026-02-11", liveName: "Re:ID Project 「RIP」Second Impact", place: "KANDA SQUARE HALL" },
+  { date: "2026-02-12", liveName: "辻ニイナ BIRTHDAY LIVE 2026", place: "SHIBUYA DIVE" },
+  { date: "2026-02-14", liveName: "HYPE IDOL！バレンタインSP", place: "一ツ橋ホール" },
   { date: "2026-02-15", liveName: "MARQUEE祭mini Vol.300", place: "Spotify O-nest" },
   { date: "2026-03-01", liveName: "「アイドル甲子園 in KANDA SQUARE HALL」-DAY2-" },
+  { date: "2026-03-13", liveName: "君と見るそら 2nd Anniversary Live〜君と描く夢〜", place: "日本橋三井ホール" },
 ];
