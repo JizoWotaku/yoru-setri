@@ -96,6 +96,7 @@ export const LIVE_EVENTS: LiveEvent[] = [
   { date: "2026-02-05", liveName: "君と見るそら 定期公演 vol.1", place: "カラオケまねきねこ渋谷本店" },
   { date: "2026-02-07", liveName: "LEADING WINTER", place: "KANDA SQUARE HALL" },
   { date: "2026-02-11", liveName: "Re:ID Project 「RIP」Second Impact", place: "KANDA SQUARE HALL" },
+  { date: "2026-02-11", liveName: "My:ME//OW Presents 「Wax on Wax off」", place: "SHIBUYA VIDENT" },
   { date: "2026-02-12", liveName: "辻ニイナ BIRTHDAY LIVE 2026", place: "SHIBUYA DIVE" },
   { date: "2026-02-14", liveName: "HYPE IDOL！バレンタインSP", place: "一ツ橋ホール" },
   { date: "2026-02-15", liveName: "MARQUEE祭mini Vol.300", place: "Spotify O-nest" },
