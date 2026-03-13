@@ -23,6 +23,11 @@ export const SONG_LIST: Song[] = [
       "君とあの日の距離kimitoanohinokyoriきみとあのひのきょりキミトアノヒノキョリkimikyoきみきょキミキョ",
   },
   {
+    title: "君と描く夢",
+    keywords:
+      "君と描く夢きみとえがくゆめキミトエガクユメkimitoegakuyume",
+  },
+  {
     title: "月から金まで",
     keywords:
       "月から金までgetsukarakinmadeげつからきんまでゲツカラキンマデgetsu",
