@@ -125,4 +125,11 @@ export const LIVE_EVENTS: LiveEvent[] = [
   { date: "2026-04-18", liveName: "1️⃣かがやきフェスSpring2026", place: "Eight Hall" },
   { date: "2026-04-18", liveName: "2️⃣かがやきフェスSpring2026", place: "REDSUN" },
   { date: "2026-04-19", liveName: "かがやきフェスSpring2026", place: "石川県教育会館" },
+  { date: "2026-06-01", liveName: "IDOL ∞ INFINITY PREMIUM vol.11", place: "Spotify O-nest" },
+  { date: "2026-06-04", liveName: "Trap Tune Fest", place: "WOMBLIVE" },
+  { date: "2026-06-06", liveName: "MARQUEE祭mini Vol.323", place: "Spotify O-nest" },
+  { date: "2026-06-07", liveName: "Dolly Tea Party Vol.2", place: "club asia" },
+  { date: "2026-06-13", liveName: "TIF学園「学園祭 2026 春」", place: "ベルエポック美容専門学校第二校舎" },
+  { date: "2026-06-15", liveName: "高鶴桃羽 BIRTHDAY LIVE 2026", place: "" },
+  { date: "2026-06-20", liveName: "Re:ID Project 「RIP」Special", place: "キャナルシティ劇場" },
 ];
