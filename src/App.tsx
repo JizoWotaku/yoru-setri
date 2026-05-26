@@ -301,7 +301,7 @@ export default function App() {
         const placePart = g.place ? `📍${g.place}\n` : " ";
         fullText += `${formattedDate}${placePart}`;
         if (g.title) fullText += `『${g.title}』\n`;
-        fullText += "#キミそらセトリ\n\n";
+        fullText += "#君そらセトリ\n\n";
         let songCount = 0;
         const setlistText = g.items.map((item) => {
             const isSpecial = item.name === "SE" || item.name === "MC" || item.name === ENCORE_NAME;
@@ -310,7 +310,7 @@ export default function App() {
         }).join("\n");
         fullText += setlistText;
     } else {
-        fullText += `${formattedDate} #キミそらセトリ\n\n`;
+        fullText += `${formattedDate} #君そらセトリ\n\n`;
         groups.forEach((g) => {
             if (g.items.length === 0 && !g.title) return;
             if (g.title) fullText += `『${g.title}』\n`;
@@ -325,7 +325,7 @@ export default function App() {
         });
     }
     fullText = fullText.trimEnd();
-    fullText += `\n\n#キミそら #君と見るそら`;
+    fullText += `\n\n#君そら #君と見るそら`;
     return fullText;
   }, [groups, dateStr]);
 
@@ -458,7 +458,7 @@ export default function App() {
         <Paper elevation={3} sx={{ p: 4, borderRadius: 4, bgcolor: '#fafafa' }}>
             <Box sx={{ textAlign: 'center', mb: 4 }}>
                 <Typography variant="h4" fontWeight="bold" color="primary" gutterBottom>
-                    キミそらセトリ
+                    君そらセトリ
                 </Typography>
                 <Typography variant="body1" color="text.secondary">
                     日付と公演を選択してスタート
@@ -1051,7 +1051,7 @@ export default function App() {
                 </Stack>
                 <Box sx={{ mt: 5, pt: 2, borderTop: '2px dashed #bdbdbd' }}>
                 <Typography variant="body1" sx={{ color: "#757575", display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, fontWeight: 'bold' }}>
-                    #キミそらセトリ
+                    #君そらセトリ
                 </Typography>
                 </Box>
             </Box>
