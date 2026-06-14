@@ -139,5 +139,5 @@ export const LIVE_EVENTS: LiveEvent[] = [
   { date: "2026-07-01", liveName: "FRONTIER IDOL SUMMIT", place: "KT Zepp Yokohama" },
   { date: "2026-07-04", liveName: "超NATSUZOME2026", place: "幕張海浜公園 Gブロック特設会場" },
   { date: "2026-07-09", liveName: "MARQUEE祭 Vol.178", place: "Spotify O-WEST" },
-  { date: "2026-07-22", liveName: ""UTAGE FES"Vol.5", place: "" },
+  { date: "2026-07-22", liveName: "UTAGE FES Vol.5", place: "" },
 ];
