@@ -7,6 +7,7 @@ export const SONG_LIST: Song[] = [
   { title: "SE", keywords: "seえすいー" },
   { title: "MC", keywords: "mcえむしー" },
   { title: "アンコール", keywords: "encoreあんこーる" },
+  { title: "生く空蝉", keywords: ""},
   { title: "皆SUMMER☆HIGHLIGHT!", keywords: "みなさま" },
   { title: "Delight", keywords: "でらいとデライトDelight"},
   {
